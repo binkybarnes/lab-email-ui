@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 import data from '../data/labs.json'
-import { toggleSetItem } from '../utils/selection'
+import { toggleSetItem, areAllSelected } from '../utils/selection'
 
 function buildInitialDrafts(members) {
   return Object.fromEntries(members.map(m => [m.id, { subject: '', body: '' }]))
@@ -51,14 +51,14 @@ export function useAppState() {
     const targets = role === 'all'
       ? visibleMembers
       : visibleMembers.filter(m => m.role === role)
-    const allSelected = targets.length > 0 && targets.every(m => selectedMemberIds.has(m.id))
     setSelectedMemberIds(prev => {
+      const allSelected = areAllSelected(targets, prev)
       const next = new Set(prev)
       if (allSelected) targets.forEach(m => next.delete(m.id))
       else targets.forEach(m => next.add(m.id))
       return next
     })
-  }, [visibleMembers, selectedMemberIds])
+  }, [visibleMembers])
 
   const clearSelection = useCallback(() => setSelectedMemberIds(new Set()), [])
 

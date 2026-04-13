@@ -11,7 +11,7 @@ describe('buildGmailUrl', () => {
 
   it('includes subject when provided', () => {
     const url = buildGmailUrl({ to: 'test@ucsd.edu', subject: 'Hello' })
-    expect(url).toContain('Hello')
+    expect(url).toContain('su=Hello')
   })
 
   it('includes body when provided', () => {
