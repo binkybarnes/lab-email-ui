@@ -22,7 +22,9 @@ export function useAppState() {
       d.labs.map(l => ({ ...l, departmentId: d.id, departmentName: d.name }))
     ), [])
 
-  const allMembers = useMemo(() => allLabs.flatMap(l => l.members), [allLabs])
+  const allMembers = useMemo(() => allLabs.flatMap(l => 
+    l.members.map(m => ({ ...m, labName: l.name, labId: l.id }))
+  ), [allLabs])
 
   const visibleLabs = useMemo(() => {
     if (visibleLabIds.size === 0) return allLabs

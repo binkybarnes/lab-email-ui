@@ -22,6 +22,7 @@ export default function LabBrowser({
   onToggleMember,
   onEmail,
   onApplyRoleSelection,
+  rightOffset,
 }) {
   const anySelected = selectedMemberIds.size > 0
 
@@ -38,7 +39,10 @@ export default function LabBrowser({
   }
 
   return (
-    <main className="ml-64 pt-14 min-h-screen relative z-10">
+    <main 
+      className="ml-64 pt-14 min-h-screen relative z-10 transition-all duration-300"
+      style={{ paddingRight: rightOffset }}
+    >
       <div className="px-8 py-7">
 
         {/* Role filter chips */}
@@ -102,8 +106,8 @@ export default function LabBrowser({
           </div>
         )}
 
-        {/* Bottom padding for sticky bar */}
-        <div className="h-20" />
+        {/* Right padding for checkout sidebar */}
+        <div className="h-10" />
       </div>
     </main>
   )

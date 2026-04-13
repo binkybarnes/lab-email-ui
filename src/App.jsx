@@ -1,9 +1,10 @@
+import { useState } from 'react'
 import { useAppState } from './hooks/useAppState'
 import AsciiBackground from './components/AsciiBackground'
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import LabBrowser from './components/LabBrowser'
-import StickyActionBar from './components/StickyActionBar'
+import CheckoutSidebar from './components/CheckoutSidebar'
 import EmailModal from './components/EmailModal'
 
 export default function App() {
@@ -26,6 +27,10 @@ export default function App() {
     navigateModal,
   } = useAppState()
 
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(true)
+  const showCheckout = selectedMembers.length > 0
+  const rightOffset = showCheckout ? (isCheckoutOpen ? '20rem' : '4rem') : '0'
+
   return (
     <div className="relative min-h-screen" style={{ background: '#f7f8fa' }}>
       <AsciiBackground />
@@ -40,12 +45,18 @@ export default function App() {
         onToggleMember={toggleMember}
         onEmail={openEmailModal}
         onApplyRoleSelection={applyRoleSelection}
+        rightOffset={rightOffset}
       />
-      <StickyActionBar
-        selectedMembers={selectedMembers}
-        onEmailSelected={openEmailModal}
-        onClear={clearSelection}
-      />
+      {showCheckout && (
+        <CheckoutSidebar
+          selectedMembers={selectedMembers}
+          onRemove={toggleMember}
+          onEmail={openEmailModal}
+          onEmailAll={openEmailModal}
+          isOpen={isCheckoutOpen}
+          setIsOpen={setIsCheckoutOpen}
+        />
+      )}
       <EmailModal
         modal={emailModal}
         onClose={closeEmailModal}
