@@ -34,7 +34,7 @@ export default function App() {
   return (
     <div className="relative min-h-screen grid-bg">
       {/* <AsciiBackground /> */}
-      <Navbar selectedCount={selectedMembers.length} />
+      <Navbar selectedCount={selectedMembers.length} rightOffset={rightOffset} />
       <Sidebar data={data} visibleLabIds={visibleLabIds} onToggleLab={toggleLab} />
       <LabBrowser
         data={data}

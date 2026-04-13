@@ -1,9 +1,10 @@
-export default function Navbar({ selectedCount = 0 }) {
+export default function Navbar({ selectedCount = 0, rightOffset = '0' }) {
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 h-12"
+      className="fixed top-0 left-0 z-50 flex items-center justify-between px-6 h-14 transition-all duration-300"
       style={{
-        background: 'rgba(30, 33, 40, 0.92)',
+        right: rightOffset,
+        background: 'rgba(30, 33, 40, 0.88)',
         backdropFilter: 'blur(12px)',
         borderBottom: '1px solid #363b47',
       }}

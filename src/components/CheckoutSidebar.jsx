@@ -6,13 +6,17 @@ export default function CheckoutSidebar({ selectedMembers, onRemove, onEmail, on
 
   return (
     <div
-      className={`fixed top-0 right-0 h-full bg-white shadow-2xl transition-all duration-300 z-50 flex flex-col ${
+      className={`fixed top-0 right-0 h-full shadow-2xl transition-all duration-300 z-50 flex flex-col ${
         isOpen ? 'w-80' : 'w-16'
       }`}
-      style={{ borderLeft: '1px solid #e2e8f0' }}
+      style={{ 
+        background: '#1e2128', 
+        borderLeft: '1px solid #363b47',
+        color: '#e4e7ed'
+      }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-100 flex-shrink-0 h-14">
+      <div className="flex items-center justify-between p-4 border-b border-[#363b47] flex-shrink-0 h-14">
         {isOpen && (
           <span className="font-semibold text-primary font-mono text-sm tracking-wide truncate pr-2">
             Selected ({selectedMembers.length})
@@ -20,7 +24,7 @@ export default function CheckoutSidebar({ selectedMembers, onRemove, onEmail, on
         )}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-1.5 rounded-lg hover:bg-gray-100 text-muted transition-colors flex-shrink-0 mx-auto"
+          className="p-1.5 rounded-lg hover:bg-[#272b34] text-muted transition-colors flex-shrink-0 mx-auto"
           title={isOpen ? "Collapse menu" : "Expand menu"}
           aria-label="Toggle sidebar"
         >
@@ -47,21 +51,21 @@ export default function CheckoutSidebar({ selectedMembers, onRemove, onEmail, on
         ).map(([labName, membersInLab]) => (
           <div key={labName} className="flex flex-col gap-2 relative">
             {isOpen && (
-              <div className="sticky top-0 bg-white/95 backdrop-blur z-10 py-1.5 px-2 -mx-2">
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{labName}</div>
+              <div className="sticky top-0 bg-[#1e2128]/95 backdrop-blur z-10 py-1.5 px-2 -mx-2">
+                <div className="text-[10px] font-bold text-[#8892a4] uppercase tracking-widest">{labName}</div>
               </div>
             )}
             {membersInLab.map(member => (
               <div
                 key={member.id}
-                className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border border-gray-100 bg-white shadow-sm hover:shadow hover:border-gray-300 ${
-                  !isOpen && 'justify-center cursor-pointer hover:bg-gray-50'
+                className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border border-[#363b47] bg-[#1e2128] shadow-sm hover:shadow hover:border-[#52586a] ${
+                  !isOpen && 'justify-center cursor-pointer hover:bg-[#272b34]'
                 }`}
                 onClick={() => !isOpen && setIsOpen(true)}
               >
                 {/* Avatar */}
                 <div 
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold font-mono flex-shrink-0 overflow-hidden bg-indigo-50 text-indigo-700"
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold font-mono flex-shrink-0 overflow-hidden bg-[#272b34] text-[#7b9fff]"
                 >
                   {member.photo ? (
                     <img src={member.photo} alt={member.name} className="w-full h-full object-cover" />
@@ -75,8 +79,8 @@ export default function CheckoutSidebar({ selectedMembers, onRemove, onEmail, on
                       e.stopPropagation()
                       onEmail([member])
                     }}>
-                    <div className="text-sm font-medium text-gray-800 truncate hover:text-indigo-600 transition-colors cursor-pointer">{member.name}</div>
-                    <div className="text-xs text-gray-400 font-mono truncate">{member.email}</div>
+                    <div className="text-sm font-medium text-[#e4e7ed] truncate hover:text-[#7b9fff] transition-colors cursor-pointer">{member.name}</div>
+                    <div className="text-xs text-[#8892a4] font-mono truncate">{member.email}</div>
                   </div>
                 )}
                 
@@ -84,7 +88,7 @@ export default function CheckoutSidebar({ selectedMembers, onRemove, onEmail, on
                   <div className="flex flex-col gap-1.5 flex-shrink-0 ml-1">
                     <button
                       onClick={(e) => { e.stopPropagation(); onRemove(member.id); }}
-                      className="text-[10px] uppercase tracking-wider font-semibold text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors"
+                      className="text-[10px] uppercase tracking-wider font-semibold text-[#f87171] hover:text-[#ef4444] hover:bg-[#ef4444]/10 px-2 py-1 rounded transition-colors"
                     >
                       Remove
                     </button>
@@ -98,11 +102,11 @@ export default function CheckoutSidebar({ selectedMembers, onRemove, onEmail, on
 
       {/* Footer */}
       {isOpen && (
-        <div className="p-4 border-t border-gray-100 bg-gray-50 flex-shrink-0">
+        <div className="p-4 border-t border-[#363b47] bg-[#1e2128] flex-shrink-0">
           <button
             onClick={() => onEmailAll(selectedMembers)}
-            className="w-full py-2.5 rounded-lg font-medium text-sm transition-all duration-200 text-white shadow hover:shadow-lg focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 transform active:scale-[0.98]"
-            style={{ background: '#4f46e5' }}
+            className="w-full py-2.5 rounded-lg font-medium text-sm transition-all duration-200 text-white shadow hover:shadow-lg focus:ring-2 focus:ring-[#4d6dff] focus:ring-offset-1 transform active:scale-[0.98]"
+            style={{ background: '#4d6dff' }}
           >
             Send All ({selectedMembers.length})
           </button>
