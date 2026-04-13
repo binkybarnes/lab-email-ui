@@ -2,16 +2,16 @@ import { useEffect } from 'react'
 import { buildGmailUrl } from '../utils/gmail'
 
 const INPUT_STYLE = {
-  background: '#f8fafc',
-  border: '1px solid #e2e8f0',
-  borderRadius: 8,
-  color: '#0f172a',
+  background: '#22262e',
+  border: '1px solid #363b47',
+  borderRadius: 3,
+  color: '#e4e7ed',
   outline: 'none',
   transition: 'border-color 0.15s',
-  fontFamily: '"DM Sans", sans-serif',
-  fontSize: 14,
+  fontFamily: '"IBM Plex Serif", serif',
+  fontSize: 13,
   width: '100%',
-  padding: '8px 12px',
+  padding: '7px 10px',
 }
 
 export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate }) {
@@ -44,29 +44,33 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate }
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-      style={{ background: 'rgba(15,23,42,0.40)', backdropFilter: 'blur(4px)' }}
+      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
-        className="w-full max-w-2xl rounded-2xl flex flex-col overflow-hidden"
+        className="w-full max-w-xl flex flex-col overflow-hidden"
         style={{
-          background: '#ffffff',
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 24px 64px rgba(15,23,42,0.18)',
+          background: '#1e2128',
+          border: '1px solid #363b47',
+          borderRadius: '5px',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
           maxHeight: '88vh',
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-4">
+        <div
+          className="flex items-center justify-between px-5 py-3"
+          style={{ borderBottom: '1px solid #363b47' }}
+        >
+          <div className="flex items-center gap-3">
             {isMulti && (
               <>
                 <button
                   onClick={() => onNavigate(-1)}
                   disabled={currentIndex === 0}
-                  className="text-sm font-mono text-secondary hover:text-primary disabled:opacity-30 transition-colors"
+                  className="text-xs font-mono text-secondary hover:text-primary disabled:opacity-30 transition-colors"
                 >
-                  ← Prev
+                  ← prev
                 </button>
                 <span className="text-xs font-mono text-muted">
                   {currentIndex + 1} / {members.length}
@@ -74,30 +78,33 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate }
                 <button
                   onClick={() => onNavigate(1)}
                   disabled={currentIndex === members.length - 1}
-                  className="text-sm font-mono text-secondary hover:text-primary disabled:opacity-30 transition-colors"
+                  className="text-xs font-mono text-secondary hover:text-primary disabled:opacity-30 transition-colors"
                 >
-                  Next →
+                  next →
                 </button>
               </>
             )}
-            <span className="text-sm font-medium text-primary">{member.name}</span>
+            <span className="text-xs font-medium text-primary font-mono">{member.name}</span>
           </div>
           <button
             onClick={onClose}
-            className="text-muted hover:text-secondary transition-colors w-7 h-7 flex items-center justify-center rounded-md hover:bg-gray-100"
+            className="text-muted hover:text-secondary transition-colors w-6 h-6 flex items-center justify-center text-xs font-mono"
+            style={{ borderRadius: '3px', border: '1px solid #363b47' }}
+            onMouseEnter={e => e.currentTarget.style.background = '#272b34'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
           >
             ✕
           </button>
         </div>
 
         {/* Form */}
-        <div className="flex flex-col gap-4 px-6 py-5 overflow-y-auto flex-1">
+        <div className="flex flex-col gap-3 px-5 py-4 overflow-y-auto flex-1">
           {/* To */}
           <div>
-            <label className="text-xs font-mono text-muted block mb-1.5">To</label>
+            <label className="text-xs font-mono text-muted block mb-1">To</label>
             <div
-              className="px-3 py-2 rounded-lg text-sm font-mono text-secondary"
-              style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}
+              className="px-3 py-1.5 text-xs font-mono text-secondary"
+              style={{ background: '#22262e', border: '1px solid #363b47', borderRadius: '3px' }}
             >
               {member.email}
             </div>
@@ -105,43 +112,43 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate }
 
           {/* Subject */}
           <div>
-            <label className="text-xs font-mono text-muted block mb-1.5">Subject</label>
+            <label className="text-xs font-mono text-muted block mb-1">Subject</label>
             <input
               type="text"
               value={draft.subject}
               onChange={e => onUpdateDraft(member.id, 'subject', e.target.value)}
               placeholder="Subject line..."
               style={INPUT_STYLE}
-              onFocus={e => e.target.style.borderColor = '#93c5fd'}
-              onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+              onFocus={e => e.target.style.borderColor = '#4d6dff'}
+              onBlur={e => e.target.style.borderColor = '#363b47'}
             />
           </div>
 
           {/* Body */}
           <div className="flex flex-col flex-1">
-            <label className="text-xs font-mono text-muted block mb-1.5">Body</label>
+            <label className="text-xs font-mono text-muted block mb-1">Body</label>
             <textarea
               value={draft.body}
               onChange={e => onUpdateDraft(member.id, 'body', e.target.value)}
               placeholder="Write your email..."
               rows={10}
-              style={{ ...INPUT_STYLE, resize: 'none', fontFamily: '"DM Mono", monospace', fontSize: 13 }}
-              onFocus={e => e.target.style.borderColor = '#93c5fd'}
-              onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+              style={{ ...INPUT_STYLE, resize: 'none', fontFamily: '"IBM Plex Mono", monospace', fontSize: 12 }}
+              onFocus={e => e.target.style.borderColor = '#4d6dff'}
+              onBlur={e => e.target.style.borderColor = '#363b47'}
             />
           </div>
         </div>
 
         {/* Footer */}
         <div
-          className="flex items-center justify-between px-6 py-4"
-          style={{ borderTop: '1px solid #f1f5f9' }}
+          className="flex items-center justify-between px-5 py-3"
+          style={{ borderTop: '1px solid #363b47' }}
         >
           <button
             disabled
             title="Coming soon"
-            className="text-xs font-mono px-3 py-1.5 rounded-md text-muted cursor-not-allowed"
-            style={{ border: '1px solid #e2e8f0', background: '#f8fafc', opacity: 0.5 }}
+            className="text-xs font-mono px-3 py-1 text-muted cursor-not-allowed opacity-40"
+            style={{ border: '1px solid #363b47', background: 'transparent', borderRadius: '3px' }}
           >
             ✦ AI Writer
           </button>
@@ -149,22 +156,22 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate }
             {isMulti && (
               <button
                 onClick={sendAll}
-                className="text-xs font-mono px-3 py-2 rounded-lg transition-colors text-secondary"
-                style={{ border: '1px solid #e2e8f0' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                className="text-xs font-mono px-3 py-1.5 transition-colors text-secondary"
+                style={{ border: '1px solid #363b47', background: 'transparent', borderRadius: '3px' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#272b34'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
-                Send All ({members.length})
+                send all ({members.length})
               </button>
             )}
             <button
               onClick={openInGmail}
-              className="text-sm font-medium px-4 py-2 rounded-lg transition-all duration-150"
-              style={{ background: '#1d4ed8', color: '#fff' }}
-              onMouseEnter={e => e.currentTarget.style.background = '#1e40af'}
-              onMouseLeave={e => e.currentTarget.style.background = '#1d4ed8'}
+              className="text-xs font-mono px-4 py-1.5 transition-all duration-150"
+              style={{ background: '#4d6dff', color: '#fff', borderRadius: '3px' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#3d5df0'}
+              onMouseLeave={e => e.currentTarget.style.background = '#4d6dff'}
             >
-              Open in Gmail →
+              open in Gmail →
             </button>
           </div>
         </div>

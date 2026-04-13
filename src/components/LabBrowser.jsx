@@ -3,14 +3,14 @@ import LabSection from './LabSection'
 const ROLES = ['PI', 'Postdoc', 'PhD', 'MS', 'Undergrad']
 
 const ROLE_CHIP_ACTIVE = {
-  background: '#1d4ed8',
-  color: '#ffffff',
-  border: '1px solid #1d4ed8',
+  background: 'rgba(77,109,255,0.2)',
+  color: '#7b9fff',
+  border: '1px solid rgba(77,109,255,0.5)',
 }
 const ROLE_CHIP_IDLE = {
-  background: '#ffffff',
-  color: '#64748b',
-  border: '1px solid #e2e8f0',
+  background: 'transparent',
+  color: '#8892a4',
+  border: '1px solid #363b47',
 }
 
 export default function LabBrowser({
@@ -38,11 +38,11 @@ export default function LabBrowser({
   }
 
   return (
-    <main className="ml-64 pt-14 min-h-screen relative z-10">
-      <div className="px-8 py-7">
+    <main className="ml-60 pt-12 min-h-screen relative z-10">
+      <div className="px-7 py-6">
 
         {/* Role filter chips */}
-        <div className="flex items-center gap-2 mb-8 flex-wrap">
+        <div className="flex items-center gap-1.5 mb-7 flex-wrap">
           <span className="text-xs font-mono text-muted mr-1">Role:</span>
           {['all', ...ROLES].map(role => {
             const active = roleFilter === role
@@ -50,18 +50,20 @@ export default function LabBrowser({
               <button
                 key={role}
                 onClick={() => handleChip(role)}
-                className="text-xs font-mono px-3 py-1.5 rounded-full transition-all duration-150"
-                style={active ? ROLE_CHIP_ACTIVE : ROLE_CHIP_IDLE}
+                className="text-xs font-mono px-2.5 py-1 transition-all duration-150"
+                style={{ ...(active ? ROLE_CHIP_ACTIVE : ROLE_CHIP_IDLE), borderRadius: '3px' }}
                 onMouseEnter={e => {
                   if (!active) {
-                    e.currentTarget.style.background = '#f8fafc'
-                    e.currentTarget.style.borderColor = '#94a3b8'
+                    e.currentTarget.style.background = '#272b34'
+                    e.currentTarget.style.borderColor = '#52586a'
+                    e.currentTarget.style.color = '#e4e7ed'
                   }
                 }}
                 onMouseLeave={e => {
                   if (!active) {
                     e.currentTarget.style.background = ROLE_CHIP_IDLE.background
-                    e.currentTarget.style.borderColor = '#e2e8f0'
+                    e.currentTarget.style.borderColor = '#363b47'
+                    e.currentTarget.style.color = '#8892a4'
                   }
                 }}
               >
@@ -73,10 +75,10 @@ export default function LabBrowser({
 
         {/* Department groups */}
         {grouped.map(({ dept, labs }) => (
-          <div key={dept.id} className="mb-14">
+          <div key={dept.id} className="mb-10">
             <div
-              className="text-xs font-mono uppercase tracking-widest text-muted mb-6 pb-3"
-              style={{ borderBottom: '1px solid #f1f5f9' }}
+              className="text-xs font-mono uppercase tracking-widest text-muted mb-4 pb-2"
+              style={{ borderBottom: '1px solid #2d3240' }}
             >
               {dept.name}
             </div>
@@ -102,7 +104,6 @@ export default function LabBrowser({
           </div>
         )}
 
-        {/* Bottom padding for sticky bar */}
         <div className="h-20" />
       </div>
     </main>

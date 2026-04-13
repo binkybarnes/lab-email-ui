@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -14,10 +14,19 @@ html {
 }
 
 body {
-  background-color: #f7f8fa;
-  color: #0f172a;
-  font-family: 'DM Sans', system-ui, sans-serif;
+  background-color: #16181d;
+  color: #e4e7ed;
+  font-family: 'IBM Plex Serif', serif;
   margin: 0;
+}
+
+/* Subtle grid overlay on the main background */
+.grid-bg {
+  background-color: #16181d;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
 ::-webkit-scrollbar {
@@ -27,13 +36,13 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
+  background: #363b47;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #cbd5e1;
+  background: #52586a;
 }
 
 input[type="checkbox"] {
-  accent-color: #1d4ed8;
+  accent-color: #4d6dff;
 }
