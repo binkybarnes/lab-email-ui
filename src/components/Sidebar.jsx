@@ -1,38 +1,75 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 
-function ChevronIcon({ open }) {
-  return (
-    <motion.svg
-      className="w-3 h-3"
-      style={{ color: '#5c6478' }}
-      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
-      animate={{ rotate: open ? 90 : 0 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-    </motion.svg>
-  )
-}
 
-function DeptSection({ dept, visibleLabIds, onToggleLab }) {
+
+function DeptSection({ dept, visibleLabIds, onToggleLab, onToggleVisibleLabs }) {
   const [open, setOpen] = useState(true)
+
+  const labIds = dept.labs.map(lab => lab.id)
+  const allSelected = labIds.length > 0 && labIds.every(id => visibleLabIds.has(id))
+  const someSelected = labIds.some(id => visibleLabIds.has(id))
+
+  const handleToggleAll = () => {
+    onToggleVisibleLabs(labIds)
+  }
 
   return (
     <div className="mb-0.5">
-      <button
-        onClick={() => setOpen(o => !o)}
-        aria-expanded={open}
-        className="flex items-center gap-2 w-full text-left px-3 py-1 transition-colors"
+      <div 
+        className="flex items-center gap-2 w-full text-left px-3 py-1 transition-colors cursor-pointer group"
         style={{ borderRadius: '3px' }}
+        onClick={() => setOpen(!open)}
         onMouseEnter={e => e.currentTarget.style.background = '#272b34'}
         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
       >
-        <ChevronIcon open={open} />
-        <span className="text-xs text-secondary font-semibold uppercase tracking-widest font-serif">
+        <div className="flex items-center justify-center relative w-4 h-4 flex-shrink-0" onClick={e => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={allSelected}
+            onChange={handleToggleAll}
+            className="w-3.5 h-3.5 rounded appearance-none cursor-pointer border-2 transition-colors m-0"
+            style={{
+              borderColor: allSelected ? '#4d6dff' : someSelected ? '#637ae6' : '#52586a',
+              backgroundColor: allSelected ? '#4d6dff' : someSelected ? 'rgba(77,109,255,0.2)' : 'transparent',
+              display: 'grid',
+              placeItems: 'center'
+            }}
+          />
+          {/* Custom checkmark/minus overlay */}
+          <div 
+            className="absolute pointer-events-none flex items-center justify-center w-3.5 h-3.5 top-0 left-0"
+            style={{ opacity: (allSelected || someSelected) ? 1 : 0 }}
+          >
+            {allSelected ? (
+              <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <div className="w-1.5 h-[2px] bg-[#7b9fff] rounded-full" />
+            )}
+          </div>
+        </div>
+
+        <span className="text-xs text-secondary font-semibold uppercase tracking-widest font-serif flex-1">
           {dept.name}
         </span>
-      </button>
+        
+        <button
+          className="p-1 hover:bg-[#363b47] text-secondary transition-colors rounded flex-shrink-0"
+          title={open ? 'Collapse Department' : 'Expand Department'}
+        >
+          <motion.svg
+            className="w-3 h-3"
+            style={{ color: '#5c6478' }}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+            animate={{ rotate: open ? 90 : 0 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </motion.svg>
+        </button>
+      </div>
 
       <AnimatePresence initial={false}>
         {open && (
@@ -63,7 +100,7 @@ function DeptSection({ dept, visibleLabIds, onToggleLab }) {
                     <span className={`text-xs flex-1 leading-tight  ${checked ? 'text-primary' : 'text-secondary'}`}>
                       {lab.name}
                     </span>
-                    <span className="text-xs  text-muted opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-xs text-muted opacity-0 group-hover:opacity-100 transition-opacity">
                       {lab.members?.length ?? 0}
                     </span>
                   </label>
@@ -77,7 +114,7 @@ function DeptSection({ dept, visibleLabIds, onToggleLab }) {
   )
 }
 
-export default function Sidebar({ data, visibleLabIds, onToggleLab }) {
+export default function Sidebar({ data, visibleLabIds, onToggleLab, onToggleVisibleLabs }) {
   return (
     <aside
       className="fixed top-14 left-0 bottom-0 w-60 overflow-y-auto z-40 py-3 px-2"
@@ -87,7 +124,7 @@ export default function Sidebar({ data, visibleLabIds, onToggleLab }) {
       }}
     >
       <div className="px-2 pb-3">
-        <p className="text-xs text-muted  leading-relaxed">
+        <p className="text-xs text-muted leading-relaxed">
           Check labs to show · select members to email
         </p>
       </div>
@@ -97,6 +134,7 @@ export default function Sidebar({ data, visibleLabIds, onToggleLab }) {
           dept={dept}
           visibleLabIds={visibleLabIds}
           onToggleLab={onToggleLab}
+          onToggleVisibleLabs={onToggleVisibleLabs}
         />
       ))}
     </aside>

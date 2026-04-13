@@ -20,6 +20,7 @@ export default function LabBrowser({
   setRoleFilter,
   selectedMemberIds,
   onToggleMember,
+  onToggleLabMembers,
   onEmail,
   onApplyRoleSelection,
   rightOffset,
@@ -81,7 +82,7 @@ export default function LabBrowser({
         {grouped.map(({ dept, labs }) => (
           <div key={dept.id} className="mb-10">
             <div
-              className="text-sm font-semibold uppercase tracking-widest text-primary mb-4 pb-2 font-serif"
+              className="text-lg font-semibold uppercase tracking-widest text-muted mb-4 pb-2 font-serif"
               style={{ borderBottom: '1px solid #2d3240' }}
             >
               {dept.name}
@@ -93,6 +94,7 @@ export default function LabBrowser({
                 roleFilter={roleFilter}
                 selectedMemberIds={selectedMemberIds}
                 onToggleMember={onToggleMember}
+                onToggleLabMembers={onToggleLabMembers}
                 onEmail={onEmail}
                 anySelected={anySelected}
               />

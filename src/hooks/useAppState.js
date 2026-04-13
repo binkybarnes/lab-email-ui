@@ -45,6 +45,19 @@ export function useAppState() {
     setVisibleLabIds(prev => toggleSetItem(prev, labId))
   }, [])
 
+  const toggleVisibleLabs = useCallback((labIds) => {
+    setVisibleLabIds(prev => {
+      const allSelected = labIds.length > 0 && labIds.every(id => prev.has(id))
+      const next = new Set(prev)
+      if (allSelected) {
+        labIds.forEach(id => next.delete(id))
+      } else {
+        labIds.forEach(id => next.add(id))
+      }
+      return next
+    })
+  }, [])
+
   const toggleMember = useCallback((memberId) => {
     setSelectedMemberIds(prev => toggleSetItem(prev, memberId))
   }, [])
@@ -61,6 +74,19 @@ export function useAppState() {
       return next
     })
   }, [visibleMembers])
+
+  const toggleLabMembers = useCallback((memberIds) => {
+    setSelectedMemberIds(prev => {
+      const allSelected = memberIds.every(id => prev.has(id))
+      const next = new Set(prev)
+      if (allSelected) {
+        memberIds.forEach(id => next.delete(id))
+      } else {
+        memberIds.forEach(id => next.add(id))
+      }
+      return next
+    })
+  }, [])
 
   const clearSelection = useCallback(() => setSelectedMemberIds(new Set()), [])
 
@@ -98,7 +124,9 @@ export function useAppState() {
     setRoleFilter,
     emailModal,
     toggleLab,
+    toggleVisibleLabs,
     toggleMember,
+    toggleLabMembers,
     applyRoleSelection,
     clearSelection,
     openEmailModal,

@@ -19,7 +19,9 @@ export default function App() {
     setRoleFilter,
     emailModal,
     toggleLab,
+    toggleVisibleLabs,
     toggleMember,
+    toggleLabMembers,
     applyRoleSelection,
     clearSelection,
     openEmailModal,
@@ -36,7 +38,12 @@ export default function App() {
     <div className="relative min-h-screen grid-bg">
       {/* <AsciiBackground /> */}
       <Navbar selectedCount={selectedMembers.length} rightOffset={rightOffset} />
-      <Sidebar data={data} visibleLabIds={visibleLabIds} onToggleLab={toggleLab} />
+      <Sidebar 
+        data={data} 
+        visibleLabIds={visibleLabIds} 
+        onToggleLab={toggleLab} 
+        onToggleVisibleLabs={toggleVisibleLabs} 
+      />
       <LabBrowser
         data={data}
         visibleLabs={visibleLabs}
@@ -44,6 +51,7 @@ export default function App() {
         setRoleFilter={setRoleFilter}
         selectedMemberIds={selectedMemberIds}
         onToggleMember={toggleMember}
+        onToggleLabMembers={toggleLabMembers}
         onEmail={openEmailModal}
         onApplyRoleSelection={applyRoleSelection}
         rightOffset={rightOffset}
