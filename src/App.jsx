@@ -32,8 +32,8 @@ export default function App() {
   const rightOffset = showCheckout ? (isCheckoutOpen ? '20rem' : '4rem') : '0'
 
   return (
-    <div className="relative min-h-screen" style={{ background: '#f7f8fa' }}>
-      <AsciiBackground />
+    <div className="relative min-h-screen grid-bg">
+      {/* <AsciiBackground /> */}
       <Navbar selectedCount={selectedMembers.length} />
       <Sidebar data={data} visibleLabIds={visibleLabIds} onToggleLab={toggleLab} />
       <LabBrowser

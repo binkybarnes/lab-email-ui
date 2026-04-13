@@ -8,18 +8,27 @@ export default function LabSection({ lab, roleFilter, selectedMemberIds, onToggl
   if (members.length === 0) return null
 
   return (
-    <section className="mb-10">
-      <div className="flex items-baseline gap-3 mb-4">
+    <section className="mb-6">
+      <div className="flex items-baseline gap-2 mb-2">
         <h2
-          className="text-base font-semibold text-primary"
-          style={{ fontFamily: '"Fraunces", Georgia, serif', fontVariationSettings: '"opsz" 18' }}
+          className="text-sm font-medium text-secondary"
+          style={{ fontFamily: '"IBM Plex Serif", Georgia, serif' }}
         >
           {lab.name}
         </h2>
         <span className="text-xs font-mono text-muted">{members.length}</span>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-        {members.map(member => (
+
+      {/* Joined panel — no gap, shared border */}
+      <div
+        style={{
+          border: '1px solid #363b47',
+          borderRadius: '4px',
+          overflow: 'hidden',
+          background: '#1e2128',
+        }}
+      >
+        {members.map((member, i) => (
           <MemberCard
             key={member.id}
             member={member}
@@ -27,6 +36,7 @@ export default function LabSection({ lab, roleFilter, selectedMemberIds, onToggl
             onToggle={onToggleMember}
             onEmail={onEmail}
             anySelected={anySelected}
+            isLast={i === members.length - 1}
           />
         ))}
       </div>
