@@ -1,0 +1,139 @@
+{
+  "departments": [
+    {
+      "id": "cse",
+      "name": "Computer Science & Engineering",
+      "labs": [
+        {
+          "id": "ai-lab",
+          "name": "Artificial Intelligence Lab",
+          "members": [
+            {
+              "id": "sarah-chen",
+              "name": "Dr. Sarah Chen",
+              "role": "PI",
+              "email": "schen@ucsd.edu",
+              "photo": null,
+              "linkedin": "https://linkedin.com/in/sarahchen",
+              "scholar": "https://scholar.google.com/citations?user=abc123"
+            },
+            {
+              "id": "michael-rodriguez",
+              "name": "Michael Rodriguez",
+              "role": "PhD",
+              "email": "mrodriguez@ucsd.edu",
+              "photo": null,
+              "linkedin": "https://linkedin.com/in/mrodriguez",
+              "scholar": null
+            },
+            {
+              "id": "emily-zhang",
+              "name": "Emily Zhang",
+              "role": "PhD",
+              "email": "ezhang@ucsd.edu",
+              "photo": null,
+              "linkedin": null,
+              "scholar": "https://scholar.google.com/citations?user=def456"
+            },
+            {
+              "id": "james-kim",
+              "name": "James Kim",
+              "role": "Postdoc",
+              "email": "jkim@ucsd.edu",
+              "photo": null,
+              "linkedin": "https://linkedin.com/in/jameskim",
+              "scholar": "https://scholar.google.com/citations?user=ghi789"
+            }
+          ]
+        },
+        {
+          "id": "csl",
+          "name": "Computer Systems Lab",
+          "members": [
+            {
+              "id": "david-park",
+              "name": "Dr. David Park",
+              "role": "PI",
+              "email": "dpark@ucsd.edu",
+              "photo": null,
+              "linkedin": "https://linkedin.com/in/davidpark",
+              "scholar": "https://scholar.google.com/citations?user=jkl012"
+            },
+            {
+              "id": "anna-torres",
+              "name": "Anna Torres",
+              "role": "MS",
+              "email": "atorres@ucsd.edu",
+              "photo": null,
+              "linkedin": "https://linkedin.com/in/annatorres",
+              "scholar": null
+            }
+          ]
+        },
+        {
+          "id": "hci-lab",
+          "name": "Human-Computer Interaction Lab",
+          "members": [
+            {
+              "id": "lisa-park",
+              "name": "Dr. Lisa Park",
+              "role": "PI",
+              "email": "lpark@ucsd.edu",
+              "photo": null,
+              "linkedin": "https://linkedin.com/in/lisapark",
+              "scholar": "https://scholar.google.com/citations?user=mno345"
+            },
+            {
+              "id": "ryan-nguyen",
+              "name": "Ryan Nguyen",
+              "role": "PhD",
+              "email": "rnguyen@ucsd.edu",
+              "photo": null,
+              "linkedin": "https://linkedin.com/in/ryannguyen",
+              "scholar": null
+            },
+            {
+              "id": "sofia-wu",
+              "name": "Sofia Wu",
+              "role": "Undergrad",
+              "email": "swu@ucsd.edu",
+              "photo": null,
+              "linkedin": null,
+              "scholar": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ece",
+      "name": "Electrical & Computer Engineering",
+      "labs": [
+        {
+          "id": "wireless-lab",
+          "name": "Wireless Systems Lab",
+          "members": [
+            {
+              "id": "chen-wei",
+              "name": "Dr. Chen Wei",
+              "role": "PI",
+              "email": "cwei@ucsd.edu",
+              "photo": null,
+              "linkedin": "https://linkedin.com/in/chenwei",
+              "scholar": "https://scholar.google.com/citations?user=pqr678"
+            },
+            {
+              "id": "priya-sharma",
+              "name": "Priya Sharma",
+              "role": "PhD",
+              "email": "psharma@ucsd.edu",
+              "photo": null,
+              "linkedin": "https://linkedin.com/in/priyasharma",
+              "scholar": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
