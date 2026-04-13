@@ -28,21 +28,25 @@ export default function AsciiBackground() {
     const ctx = canvas.getContext('2d')
     let animId
 
+    // Set fillStyle once — never changes
+    ctx.fillStyle = CHAR_COLOR
+
+    const particles = []
+
     function resize() {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
+      // Redistribute all particles to new bounds
+      particles.length = 0
+      for (let i = 0; i < CHAR_COUNT; i++) {
+        particles.push(makeParticle(canvas.width, canvas.height, true))
+      }
     }
     resize()
     window.addEventListener('resize', resize)
 
-    // Seed particles spread across the screen on load
-    const particles = Array.from({ length: CHAR_COUNT }, () =>
-      makeParticle(canvas.width, canvas.height, true)
-    )
-
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-      ctx.fillStyle = CHAR_COLOR
       particles.forEach(p => {
         ctx.font = `${p.size}px 'DM Mono', monospace`
         ctx.fillText(p.char, p.x, p.y)
@@ -65,7 +69,8 @@ export default function AsciiBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none"
+      aria-hidden="true"
+      className="fixed inset-0 pointer-events-none z-0"
       style={{ zIndex: 0 }}
     />
   )

@@ -1,4 +1,4 @@
-export default function Navbar({ selectedCount }) {
+export default function Navbar({ selectedCount = 0 }) {
   return (
     <header
       className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 h-14"
@@ -22,6 +22,8 @@ export default function Navbar({ selectedCount }) {
 
       {selectedCount > 0 && (
         <div
+          role="status"
+          aria-live="polite"
           className="text-xs font-mono px-2.5 py-1 rounded-full"
           style={{
             background: '#dbeafe',

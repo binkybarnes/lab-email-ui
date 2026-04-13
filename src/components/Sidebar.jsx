@@ -19,6 +19,7 @@ function DeptSection({ dept, visibleLabIds, onToggleLab }) {
     <div className="mb-1">
       <button
         onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
         className="flex items-center gap-2 w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors rounded-md"
       >
         <ChevronIcon open={open} />
@@ -44,7 +45,7 @@ function DeptSection({ dept, visibleLabIds, onToggleLab }) {
                     {lab.name}
                   </span>
                   <span className="text-xs font-mono text-muted opacity-0 group-hover:opacity-100 transition-opacity">
-                    {lab.members.length}
+                    {lab.members?.length ?? 0}
                   </span>
                 </label>
               </li>
