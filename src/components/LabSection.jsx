@@ -1,3 +1,4 @@
+import { motion } from 'motion/react'
 import MemberCard from './MemberCard'
 
 export default function LabSection({ lab, roleFilter, selectedMemberIds, onToggleMember, onEmail, anySelected }) {
@@ -8,15 +9,19 @@ export default function LabSection({ lab, roleFilter, selectedMemberIds, onToggl
   if (members.length === 0) return null
 
   return (
-    <section className="mb-6">
+    <motion.section
+      className="mb-6"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+    >
       <div className="flex items-baseline gap-2 mb-2">
         <h2
-          className="text-sm font-medium text-secondary"
-          style={{ fontFamily: '"IBM Plex Serif", Georgia, serif' }}
+          className="text-lg font-semibold text-primary font-serif"
         >
           {lab.name}
         </h2>
-        <span className="text-xs font-mono text-muted">{members.length}</span>
+        <span className="text-sm text-secondary">{members.length}</span>
       </div>
 
       {/* Joined panel — no gap, shared border */}
@@ -40,6 +45,6 @@ export default function LabSection({ lab, roleFilter, selectedMemberIds, onToggl
           />
         ))}
       </div>
-    </section>
+    </motion.section>
   )
 }

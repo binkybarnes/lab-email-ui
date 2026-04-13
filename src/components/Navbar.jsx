@@ -11,13 +11,9 @@ export default function Navbar({ selectedCount = 0, rightOffset = '0' }) {
     >
       <div className="flex items-baseline gap-3">
         <span
-          className="text-primary font-semibold text-sm tracking-tight"
-          style={{ fontFamily: '"IBM Plex Serif", serif' }}
+          className="text-primary font-semibold text-2xl tracking-tight font-serif"
         >
           UCSD Lab Browser
-        </span>
-        <span className="text-muted text-xs font-mono hidden sm:inline">
-          browse labs · contact researchers
         </span>
       </div>
 
@@ -25,7 +21,7 @@ export default function Navbar({ selectedCount = 0, rightOffset = '0' }) {
         <div
           role="status"
           aria-live="polite"
-          className="text-xs font-mono px-2.5 py-0.5 rounded"
+          className="text-xs  px-2.5 py-0.5 rounded"
           style={{
             background: 'rgba(77,109,255,0.15)',
             color: '#7b9fff',

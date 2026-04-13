@@ -50,13 +50,12 @@ export default function MemberCard({ member, selected, onToggle, onEmail, anySel
     >
       {/* Checkbox */}
       <div
-        className={`transition-opacity duration-150 flex-shrink-0 ${anySelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-          }`}
+        className="transition-opacity duration-150 flex-shrink-0 opacity-100"
       >
         <input
           type="checkbox"
           checked={selected}
-          onChange={() => onToggle(member.id)}
+          onChange={(e) => { e.stopPropagation(); onToggle(member.id); }}
           className="w-3.5 h-3.5 cursor-pointer"
           style={{ borderRadius: '2px' }}
           aria-label={`Select ${member.name}`}
@@ -65,7 +64,7 @@ export default function MemberCard({ member, selected, onToggle, onEmail, anySel
 
       {/* Avatar */}
       <div
-        className="w-7 h-7 rounded flex items-center justify-center text-xs font-mono font-medium flex-shrink-0"
+        className="w-7 h-7 rounded flex items-center justify-center text-xs font-medium flex-shrink-0"
         style={{ background: cfg.bg, color: cfg.text }}
       >
         {member.photo
@@ -80,7 +79,7 @@ export default function MemberCard({ member, selected, onToggle, onEmail, anySel
           {member.name}
         </span>
         <span
-          className="text-xs font-mono px-1 py-0.5 flex-shrink-0 leading-none"
+          className="text-xs px-1 py-0.5 flex-shrink-0 leading-none"
           style={{ background: cfg.bg, color: cfg.text, borderRadius: '2px' }}
         >
           {member.role}
@@ -88,7 +87,7 @@ export default function MemberCard({ member, selected, onToggle, onEmail, anySel
       </div>
 
       {/* Email address */}
-      <div className="text-xs font-mono text-muted truncate flex-1 min-w-0">
+      <div className="text-xs text-muted truncate flex-1 min-w-0">
         {member.email}
       </div>
 
@@ -108,7 +107,7 @@ export default function MemberCard({ member, selected, onToggle, onEmail, anySel
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); onToggle(member.id); }}
-          className="text-xs font-mono px-2 py-0.5 transition-all duration-150"
+          className="text-xs px-2 py-0.5 transition-all duration-150"
           style={{
             border: '1px solid #363b47',
             background: 'transparent',

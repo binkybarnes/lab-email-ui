@@ -1,117 +1,166 @@
-import { useState } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
+
+const ROLE_ACCENT = {
+  PI: '#d97706',
+  Postdoc: '#b45309',
+  PhD: '#3b82f6',
+  MS: '#2563eb',
+  Undergrad: '#52586a',
+}
 
 export default function CheckoutSidebar({ selectedMembers, onRemove, onEmail, onEmailAll, isOpen, setIsOpen }) {
-
   if (selectedMembers.length === 0) return null
 
+  const grouped = selectedMembers.reduce((acc, member) => {
+    if (!acc[member.labName]) acc[member.labName] = []
+    acc[member.labName].push(member)
+    return acc
+  }, {})
+
   return (
-    <div
-      className={`fixed top-0 right-0 h-full shadow-2xl transition-all duration-300 z-50 flex flex-col ${
-        isOpen ? 'w-80' : 'w-16'
-      }`}
-      style={{ 
-        background: '#1e2128', 
+    <motion.aside
+      initial={{ x: '100%' }}
+      animate={{ x: 0, width: isOpen ? 320 : 64 }}
+      exit={{ x: '100%' }}
+      transition={{ type: 'spring', stiffness: 500, damping: 34, mass: 0.8}}
+      className="fixed top-0 right-0 h-full z-50 flex flex-col"
+      style={{
+        background: '#1e2128',
         borderLeft: '1px solid #363b47',
-        color: '#e4e7ed'
+        boxShadow: '-4px 0 24px rgba(0,0,0,0.35)',
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-[#363b47] flex-shrink-0 h-14">
-        {isOpen && (
-          <span className="font-semibold text-primary font-mono text-sm tracking-wide truncate pr-2">
-            Selected ({selectedMembers.length})
-          </span>
-        )}
+      <div
+        className="flex items-center justify-between gap-3 px-4 flex-shrink-0 h-14"
+        style={{ borderBottom: '1px solid #363b47' }}
+      >
+        
+        <AnimatePresence>
+          {isOpen && (
+            <motion.span
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -8 }}
+              transition={{ duration: 0.15 }}
+              className="font-medium text-primary text-xs tracking-wide truncate"
+            >
+              Selected ({selectedMembers.length})
+            </motion.span>
+          )}
+        </AnimatePresence>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-1.5 rounded-lg hover:bg-[#272b34] text-muted transition-colors flex-shrink-0 mx-auto"
-          title={isOpen ? "Collapse menu" : "Expand menu"}
-          aria-label="Toggle sidebar"
+          className="p-1.5 hover:bg-[#272b34] text-primary transition-colors flex-shrink-0"
+          style={{ borderRadius: '3px' }}
+          title={isOpen ? 'Collapse' : 'Expand'}
         >
-          {isOpen ? (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          )}
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d={isOpen ? 'M9 5l7 7-7 7' : 'M15 19l-7-7 7-7'} />
+          </svg>
         </button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 gap-3 flex flex-col">
-        {Object.entries(
-          selectedMembers.reduce((acc, member) => {
-            if (!acc[member.labName]) acc[member.labName] = [];
-            acc[member.labName].push(member);
-            return acc;
-          }, {})
-        ).map(([labName, membersInLab]) => (
-          <div key={labName} className="flex flex-col gap-2 relative">
-            {isOpen && (
-              <div className="sticky top-0 bg-[#1e2128]/95 backdrop-blur z-10 py-1.5 px-2 -mx-2">
-                <div className="text-[10px] font-bold text-[#8892a4] uppercase tracking-widest">{labName}</div>
-              </div>
-            )}
-            {membersInLab.map(member => (
-              <div
-                key={member.id}
-                className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border border-[#363b47] bg-[#1e2128] shadow-sm hover:shadow hover:border-[#52586a] ${
-                  !isOpen && 'justify-center cursor-pointer hover:bg-[#272b34]'
-                }`}
-                onClick={() => !isOpen && setIsOpen(true)}
-              >
-                {/* Avatar */}
-                <div 
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold font-mono flex-shrink-0 overflow-hidden bg-[#272b34] text-[#7b9fff]"
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 flex flex-col gap-1">
+        {Object.entries(grouped).map(([labName, membersInLab]) => (
+          <div key={labName}>
+            <AnimatePresence>
+              {isOpen && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="text-[10px] text-muted uppercase tracking-widest px-2 py-1.5 truncate"
                 >
-                  {member.photo ? (
-                    <img src={member.photo} alt={member.name} className="w-full h-full object-cover" />
-                  ) : (
-                    member.name.charAt(0)
+                  {labName}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence mode="popLayout">
+              {membersInLab.map((member, i) => (
+                <motion.div
+                  key={member.id}
+                  layout
+                  initial={{ opacity: 0, x: 40, scale: 0.95 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 40, scale: 0.95 }}
+                  transition={{
+                    type: 'spring',
+                    stiffness: 500,
+                    damping: 30,
+                    delay: i * 0.04,
+                  }}
+                  className="flex items-center gap-2.5 px-2 py-1.5 group transition-colors"
+                  style={{ borderRadius: '3px', borderLeft: `2px solid ${ROLE_ACCENT[member.role] || ROLE_ACCENT.Undergrad}` }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#272b34'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  onClick={() => !isOpen && setIsOpen(true)}
+                >
+                  {/* Avatar */}
+                  <div
+                    className="w-8 h-8 flex items-center justify-center text-xs font-medium flex-shrink-0"
+                    style={{ background: '#272b34', color: (ROLE_ACCENT[member.role] || '#7b9fff'), borderRadius: '3px' }}
+                  >
+                    {member.photo
+                      ? <img src={member.photo} alt={member.name} className="w-full h-full object-cover" style={{ borderRadius: '3px' }} />
+                      : member.name.charAt(0)
+                    }
+                  </div>
+
+                  {isOpen && (
+                    <>
+                      <div
+                        className="flex-1 min-w-0 cursor-pointer"
+                        onClick={e => { e.stopPropagation(); onEmail([member]) }}
+                      >
+                        <div className="text-xs font-medium text-primary truncate hover:text-[#7b9fff] transition-colors">
+                          {member.name}
+                        </div>
+                        <div className="text-[11px] text-muted truncate">{member.email}</div>
+                      </div>
+
+                      <button
+                        onClick={e => { e.stopPropagation(); onRemove(member.id) }}
+                        className="text-[10px] text-muted hover:text-[#f87171] px-1.5 py-0.5 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
+                        style={{ borderRadius: '2px' }}
+                      >
+                        ✕
+                      </button>
+                    </>
                   )}
-                </div>
-                
-                {isOpen && (
-                  <div className="flex-1 min-w-0" onClick={(e) => {
-                      e.stopPropagation()
-                      onEmail([member])
-                    }}>
-                    <div className="text-sm font-medium text-[#e4e7ed] truncate hover:text-[#7b9fff] transition-colors cursor-pointer">{member.name}</div>
-                    <div className="text-xs text-[#8892a4] font-mono truncate">{member.email}</div>
-                  </div>
-                )}
-                
-                {isOpen && (
-                  <div className="flex flex-col gap-1.5 flex-shrink-0 ml-1">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onRemove(member.id); }}
-                      className="text-[10px] uppercase tracking-wider font-semibold text-[#f87171] hover:text-[#ef4444] hover:bg-[#ef4444]/10 px-2 py-1 rounded transition-colors"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         ))}
       </div>
 
       {/* Footer */}
-      {isOpen && (
-        <div className="p-4 border-t border-[#363b47] bg-[#1e2128] flex-shrink-0">
-          <button
-            onClick={() => onEmailAll(selectedMembers)}
-            className="w-full py-2.5 rounded-lg font-medium text-sm transition-all duration-200 text-white shadow hover:shadow-lg focus:ring-2 focus:ring-[#4d6dff] focus:ring-offset-1 transform active:scale-[0.98]"
-            style={{ background: '#4d6dff' }}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.15 }}
+            className="p-3 flex-shrink-0"
+            style={{ borderTop: '1px solid #363b47' }}
           >
-            Send All ({selectedMembers.length})
-          </button>
-        </div>
-      )}
-    </div>
+            <button
+              onClick={() => onEmailAll(selectedMembers)}
+              className="w-full py-2 text-xs transition-all duration-150 truncate"
+              style={{ background: '#4d6dff', color: '#fff', borderRadius: '3px' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#3d5df0'}
+              onMouseLeave={e => e.currentTarget.style.background = '#4d6dff'}
+            >
+              Send All ({selectedMembers.length})
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.aside>
   )
 }

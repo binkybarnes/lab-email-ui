@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { AnimatePresence } from 'motion/react'
 import { useAppState } from './hooks/useAppState'
 import AsciiBackground from './components/AsciiBackground'
 import Navbar from './components/Navbar'
@@ -29,7 +30,7 @@ export default function App() {
 
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(true)
   const showCheckout = selectedMembers.length > 0
-  const rightOffset = showCheckout ? (isCheckoutOpen ? '20rem' : '4rem') : '0'
+  const rightOffset = showCheckout ? (isCheckoutOpen ? '18.2rem' : '3.7rem') : '0'
 
   return (
     <div className="relative min-h-screen grid-bg">
@@ -47,16 +48,19 @@ export default function App() {
         onApplyRoleSelection={applyRoleSelection}
         rightOffset={rightOffset}
       />
-      {showCheckout && (
-        <CheckoutSidebar
-          selectedMembers={selectedMembers}
-          onRemove={toggleMember}
-          onEmail={openEmailModal}
-          onEmailAll={openEmailModal}
-          isOpen={isCheckoutOpen}
-          setIsOpen={setIsCheckoutOpen}
-        />
-      )}
+      <AnimatePresence>
+        {showCheckout && (
+          <CheckoutSidebar
+            key="checkout"
+            selectedMembers={selectedMembers}
+            onRemove={toggleMember}
+            onEmail={openEmailModal}
+            onEmailAll={openEmailModal}
+            isOpen={isCheckoutOpen}
+            setIsOpen={setIsCheckoutOpen}
+          />
+        )}
+      </AnimatePresence>
       <EmailModal
         modal={emailModal}
         onClose={closeEmailModal}
