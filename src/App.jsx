@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import { AnimatePresence } from 'motion/react'
 import { useAppState } from './hooks/useAppState'
-import AsciiBackground from './components/AsciiBackground'
+import { useAuth } from './hooks/useAuth'
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import LabBrowser from './components/LabBrowser'
 import CheckoutSidebar from './components/CheckoutSidebar'
 import EmailModal from './components/EmailModal'
+import LoginScreen from './components/LoginScreen'
 
 export default function App() {
+  const { session, loading, signIn, signOut } = useAuth()
+
   const {
     data,
     visibleLabs,
@@ -34,15 +37,23 @@ export default function App() {
   const showCheckout = selectedMembers.length > 0
   const rightOffset = showCheckout ? (isCheckoutOpen ? '18.2rem' : '3.7rem') : '0'
 
+  if (loading) return null
+
+  if (!session) return <LoginScreen onSignIn={signIn} />
+
   return (
     <div className="relative min-h-screen grid-bg">
-      {/* <AsciiBackground /> */}
-      <Navbar selectedCount={selectedMembers.length} rightOffset={rightOffset} />
-      <Sidebar 
-        data={data} 
-        visibleLabIds={visibleLabIds} 
-        onToggleLab={toggleLab} 
-        onToggleVisibleLabs={toggleVisibleLabs} 
+      <Navbar
+        selectedCount={selectedMembers.length}
+        rightOffset={rightOffset}
+        user={session.user}
+        onSignOut={signOut}
+      />
+      <Sidebar
+        data={data}
+        visibleLabIds={visibleLabIds}
+        onToggleLab={toggleLab}
+        onToggleVisibleLabs={toggleVisibleLabs}
       />
       <LabBrowser
         data={data}
@@ -74,6 +85,8 @@ export default function App() {
         onClose={closeEmailModal}
         onUpdateDraft={updateDraft}
         onNavigate={navigateModal}
+        accessToken={session.provider_token}
+        senderEmail={session.user.email}
       />
     </div>
   )
