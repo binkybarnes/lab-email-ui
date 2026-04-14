@@ -1,9 +1,9 @@
 const ROLE_CONFIG = {
-  PI: { bg: 'rgba(217,119,6,0.15)', text: '#fbbf24', accent: '#d97706' },
-  Postdoc: { bg: 'rgba(217,119,6,0.10)', text: '#f59e0b', accent: '#b45309' },
-  PhD: { bg: 'rgba(59,130,246,0.15)', text: '#93c5fd', accent: '#3b82f6' },
-  MS: { bg: 'rgba(59,130,246,0.10)', text: '#7eb8fb', accent: '#2563eb' },
-  Undergrad: { bg: 'rgba(100,116,139,0.12)', text: '#8892a4', accent: '#52586a' },
+  PI: { bg: 'rgba(239, 68, 68, 0.15)', text: '#f87171', accent: '#ef4444' },        // Legendary (Red)
+  Postdoc: { bg: 'rgba(234, 179, 8, 0.15)', text: '#facc15', accent: '#eab308' },  // Epic (Yellow)
+  PhD: { bg: 'rgba(59, 130, 246, 0.15)', text: '#93c5fd', accent: '#3b82f6' },      // Rare (Blue)
+  MS: { bg: 'rgba(59, 130, 246, 0.15)', text: '#93c5fd', accent: '#3b82f6' },       // Rare (Blue)
+  Undergrad: { bg: 'rgba(34, 197, 94, 0.15)', text: '#4ade80', accent: '#22c55e' }, // Common (Green)
 }
 
 function getInitials(name) {

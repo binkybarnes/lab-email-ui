@@ -16,10 +16,15 @@ export default function LabSection({ lab, roleFilter, selectedMemberIds, onToggl
       transition={{ type: 'spring', stiffness: 400, damping: 32 }}
     >
       <div className="flex items-baseline gap-2 mb-2">
-        <h2
-          className="text-lg font-semibold text-primary font-serif"
-        >
-          {lab.name}
+        <h2 className="text-lg font-semibold text-primary font-serif">
+          <a 
+            href={lab.website || '#'} 
+            target={lab.website ? "_blank" : "_self"} 
+            rel="noopener noreferrer" 
+            className="hover:text-secondary hover:underline transition-colors"
+          >
+            {lab.name}
+          </a>
         </h2>
         <span className="text-sm text-secondary">{members.length}</span>
       </div>
