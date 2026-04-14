@@ -49,29 +49,12 @@ async def crawl_lab(crawler, faculty: FacultyWithURL) -> tuple[str, str]:
         return slug, ""
     combined_md.append(result.markdown or "")
 
-    # Early stop: homepage already has people content
-    if has_people_content(result.markdown or ""):
-        return slug, "\n\n".join(combined_md)
-
-    # Find and crawl relevant subpages (up to MAX_PAGES_PER_DOMAIN - 1)
-    # Check both the URL path AND the anchor text — some sites use generic paths (page2.html)
-    # but have descriptive link text like "Lab Members"
-    def is_relevant_link(lnk: dict) -> bool:
-        href = lnk.get("href", "")
-        text = lnk.get("text", "").lower()
-        if not href:
-            return False
-        if any(kw in href.lower().split("?")[0] for kw in BLOCKED_URL_KEYWORDS):
-            return False
-        return (
-            any(kw in href.lower().split("?")[0] for kw in ALLOWED_URL_KEYWORDS)
-            or any(kw in text for kw in ALLOWED_URL_KEYWORDS)
-        )
-
+    # Follow all internal links at depth 1 (skip only blocked patterns), up to max
     links = [
         lnk["href"]
         for lnk in (result.links.get("internal", []) or [])
-        if is_relevant_link(lnk)
+        if lnk.get("href")
+        and not any(kw in lnk["href"].lower().split("?")[0] for kw in BLOCKED_URL_KEYWORDS)
     ][: MAX_PAGES_PER_DOMAIN - 1]
 
     for link in links:
