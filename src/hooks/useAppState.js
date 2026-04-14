@@ -6,10 +6,6 @@ const allLabsStatic = data.departments.flatMap(d =>
   d.labs.map(l => ({ ...l, departmentId: d.id, departmentName: d.name }))
 )
 
-function buildInitialDrafts(members) {
-  return Object.fromEntries(members.map(m => [m.id, { subject: '', body: '', toOverride: '' }]))
-}
-
 export function useAppState() {
   const [visibleLabIds, setVisibleLabIds] = useState(new Set(allLabsStatic.map(l => l.id)))
   const [selectedMemberIds, setSelectedMemberIds] = useState(new Set())
@@ -91,18 +87,11 @@ export function useAppState() {
   const clearSelection = useCallback(() => setSelectedMemberIds(new Set()), [])
 
   const openEmailModal = useCallback((members) => {
-    setEmailModal({ open: true, members, currentIndex: 0, drafts: buildInitialDrafts(members) })
+    setEmailModal({ open: true, members, currentIndex: 0 })
   }, [])
 
   const closeEmailModal = useCallback(() => {
     setEmailModal(prev => ({ ...prev, open: false }))
-  }, [])
-
-  const updateDraft = useCallback((memberId, field, value) => {
-    setEmailModal(prev => ({
-      ...prev,
-      drafts: { ...prev.drafts, [memberId]: { ...prev.drafts[memberId], [field]: value } },
-    }))
   }, [])
 
   const navigateModal = useCallback((direction) => {
@@ -131,7 +120,6 @@ export function useAppState() {
     clearSelection,
     openEmailModal,
     closeEmailModal,
-    updateDraft,
     navigateModal,
   }
 }

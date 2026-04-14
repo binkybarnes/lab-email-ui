@@ -529,6 +529,27 @@
               "role": "PI",
               "email": "s1ward@ucsd.edu",
               "photo": "https://matsci.ucsd.edu/sites/default/files/profile-photos/Untitled%20design%20-%202023-12-20T104508.563.png"
+            },
+            {
+              "id": "david-berry",
+              "name": "David Berry",
+              "role": "PI",
+              "email": "dbberry@health.ucsd.edu",
+              "photo": "https://matsci.ucsd.edu/sites/default/files/profile-photos/davidberry_UCSD.jpg"
+            },
+            {
+              "id": "michael-tolley",
+              "name": "Michael Tolley",
+              "role": "PI",
+              "email": "mttolley@ucsd.edu",
+              "photo": "https://matsci.ucsd.edu/sites/default/files/profile-photos/mTolley1.jpg"
+            },
+            {
+              "id": "geert-w-schmid-schoenbein",
+              "name": "Geert W. Schmid-Schoenbein",
+              "role": "PI",
+              "email": "gschmid@ucsd.edu",
+              "photo": "https://matsci.ucsd.edu/sites/default/files/profile-photos/gSchmid-Schoenbein.jpg"
             }
           ]
         },
@@ -536,38 +557,6 @@
           "id": "scripps-institution-of-oceanography",
           "name": "Scripps Institution of Oceanography",
           "website": "https://scripps.ucsd.edu/news/cloned-gene-sea-animal-may-prove-key-cancer-drug-development",
-          "overview": "A research institution dedicated to understanding and protecting the planet through oceanographic, earth science, and climate research across multiple disciplines.",
-          "members": [
-            {
-              "id": "roger-revelle",
-              "name": "Roger Revelle",
-              "role": "PI",
-              "photo": "https://scripps.ucsd.edu/sites/default/files/profile_photo/exp_A_RoemmichArgo_095.jpg"
-            },
-            {
-              "id": "harald-sverdrup",
-              "name": "Harald Sverdrup",
-              "role": "PI",
-              "photo": "https://scripps.ucsd.edu/sites/default/files/styles/news_header_800x500_enforcer/public/2020-07/Scripps-History_Sverdrup-Munk.jpg?itok=usB4UpCE"
-            },
-            {
-              "id": "walter-munk",
-              "name": "Walter Munk",
-              "role": "PhD",
-              "photo": "https://scripps.ucsd.edu/sites/default/files/styles/news_header_800x500_enforcer/public/2020-07/Scripps-History_Sverdrup-Munk.jpg?itok=usB4UpCE"
-            },
-            {
-              "id": "charles-david-keeling",
-              "name": "Charles David Keeling",
-              "role": "Staff",
-              "photo": "https://scripps.ucsd.edu/sites/default/files/styles/news_header_800x500_enforcer/public/2020-08/Scripps-History_Charles-David-Keeling-Curve.jpg?itok=z81CKMy1"
-            }
-          ]
-        },
-        {
-          "id": "scripps-institution-of-oceanography",
-          "name": "Scripps Institution of Oceanography",
-          "website": "https://scripps.ucsd.edu/profiles/bpalenik",
           "overview": "A research institution dedicated to understanding and protecting the planet through oceanographic, earth science, and climate research across multiple disciplines.",
           "members": [
             {
@@ -821,34 +810,6 @@
           ]
         },
         {
-          "id": "program-in-materials-science-and-engineering",
-          "name": "Program in Materials Science and Engineering",
-          "website": "https://matsci.ucsd.edu/faculty/david-berry",
-          "overview": "The Program in Materials Science and Engineering at UC San Diego is an interdisciplinary program focused on advanced materials research and education across multiple departments.",
-          "members": [
-            {
-              "id": "olivia-a-graeve",
-              "name": "Olivia A. Graeve",
-              "role": "PI",
-              "photo": "https://matsci.ucsd.edu/sites/default/files/inline-images/PictureGraeve2%20%282%29.jpg"
-            },
-            {
-              "id": "david-berry",
-              "name": "David Berry",
-              "role": "PI",
-              "email": "dbberry@health.ucsd.edu",
-              "photo": "https://matsci.ucsd.edu/sites/default/files/profile-photos/davidberry_UCSD.jpg"
-            },
-            {
-              "id": "michael-tolley",
-              "name": "Michael Tolley",
-              "role": "PI",
-              "email": "mttolley@ucsd.edu",
-              "photo": "https://matsci.ucsd.edu/sites/default/files/profile-photos/mTolley1.jpg"
-            }
-          ]
-        },
-        {
           "id": "school-of-biological-sciences",
           "name": "School of Biological Sciences",
           "website": "https://biology.ucsd.edu/research/faculty/mrosenfeld",
@@ -1022,6 +983,36 @@
               "name": "Sara Werner",
               "role": "Staff",
               "email": "slwerner@ucsd.edu"
+            },
+            {
+              "id": "michael-david",
+              "name": "Michael David",
+              "role": "PI"
+            },
+            {
+              "id": "susan-golden",
+              "name": "Susan Golden",
+              "role": "PI"
+            },
+            {
+              "id": "yishi-jin",
+              "name": "Yishi Jin",
+              "role": "PI"
+            },
+            {
+              "id": "ed-callaway",
+              "name": "Ed Callaway",
+              "role": "PI"
+            },
+            {
+              "id": "david-holway",
+              "name": "David Holway",
+              "role": "PI"
+            },
+            {
+              "id": "amy-kiger",
+              "name": "Amy Kiger",
+              "role": "PI"
             }
           ]
         },
@@ -2169,40 +2160,6 @@
           ]
         },
         {
-          "id": "center-for-academic-research-and-training-in-anthropogeny-carta",
-          "name": "Center for Academic Research and Training in Anthropogeny (CARTA)",
-          "website": "https://carta.anthropogeny.org/users/caroline-nievergelt",
-          "overview": "CARTA is a virtual organization that explores and explains the origins of humans through transdisciplinary research, focusing on understanding human uniqueness compared to other great apes.",
-          "members": [
-            {
-              "id": "pascal-gagneux",
-              "name": "Pascal Gagneux",
-              "role": "PI",
-              "email": "carta-info@anthropogeny.org"
-            },
-            {
-              "id": "katerina-semendeferi",
-              "name": "Katerina Semendeferi",
-              "role": "PI"
-            },
-            {
-              "id": "gerald-f-joyce",
-              "name": "Gerald F. Joyce",
-              "role": "PI"
-            },
-            {
-              "id": "rachel-mayberry",
-              "name": "Rachel Mayberry",
-              "role": "Associate Director"
-            },
-            {
-              "id": "alysson-r-muotri",
-              "name": "Alysson R. Muotri",
-              "role": "Associate Director"
-            }
-          ]
-        },
-        {
           "id": "kavanaugh-lab",
           "name": "Kavanaugh Lab",
           "website": "https://rheumatology.ucsd.edu/research/faculty-labs/kavanaugh/index.html",
@@ -2593,38 +2550,6 @@
               "id": "victor-nizet",
               "name": "Victor Nizet",
               "role": "PI"
-            }
-          ]
-        },
-        {
-          "id": "scripps-institution-of-oceanography",
-          "name": "Scripps Institution of Oceanography",
-          "website": "https://scripps.ucsd.edu/profiles/lzholland",
-          "overview": "A research institution dedicated to understanding and protecting the planet through oceanographic, earth science, and climate research across multiple disciplines.",
-          "members": [
-            {
-              "id": "roger-revelle",
-              "name": "Roger Revelle",
-              "role": "PI",
-              "photo": "https://scripps.ucsd.edu/sites/default/files/profile_photo/exp_A_RoemmichArgo_095.jpg"
-            },
-            {
-              "id": "harald-sverdrup",
-              "name": "Harald Sverdrup",
-              "role": "PI",
-              "photo": "https://scripps.ucsd.edu/sites/default/files/styles/news_header_800x500_enforcer/public/2020-07/Scripps-History_Sverdrup-Munk.jpg?itok=usB4UpCE"
-            },
-            {
-              "id": "walter-munk",
-              "name": "Walter Munk",
-              "role": "PhD",
-              "photo": "https://scripps.ucsd.edu/sites/default/files/styles/news_header_800x500_enforcer/public/2020-07/Scripps-History_Sverdrup-Munk.jpg?itok=usB4UpCE"
-            },
-            {
-              "id": "charles-david-keeling",
-              "name": "Charles David Keeling",
-              "role": "Staff",
-              "photo": "https://scripps.ucsd.edu/sites/default/files/styles/news_header_800x500_enforcer/public/2020-08/Scripps-History_Charles-David-Keeling-Curve.jpg?itok=z81CKMy1"
             }
           ]
         },
@@ -3429,6 +3354,13 @@
               "name": "Gene Yeo",
               "role": "PI",
               "photo": "https://igm.ucsd.edu/sites/default/files/styles/large/public/images/Faculty/Gene_Yeo.jpeg"
+            },
+            {
+              "id": "kathleen-curtius",
+              "name": "Kathleen Curtius",
+              "role": "PI",
+              "email": "kcurtius@health.ucsd.edu",
+              "photo": "https://igm.ucsd.edu/sites/default/files/images/Faculty/headshot_UCSD_profile.png"
             }
           ]
         },
@@ -3618,44 +3550,6 @@
               "id": "corey-smeenk",
               "name": "Corey Smeenk",
               "role": "Undergrad"
-            }
-          ]
-        },
-        {
-          "id": "school-of-biological-sciences-at-uc-san-diego",
-          "name": "School of Biological Sciences at UC San Diego",
-          "website": "https://biology.ucsd.edu/research/faculty/midavid",
-          "overview": "The School of Biological Sciences conducts research across multiple biological disciplines, advancing knowledge and applying research discoveries to improve human health, protect the environment, and enrich the economy.",
-          "members": [
-            {
-              "id": "michael-david",
-              "name": "Michael David",
-              "role": "PI"
-            },
-            {
-              "id": "susan-golden",
-              "name": "Susan Golden",
-              "role": "PI"
-            },
-            {
-              "id": "yishi-jin",
-              "name": "Yishi Jin",
-              "role": "PI"
-            },
-            {
-              "id": "ed-callaway",
-              "name": "Ed Callaway",
-              "role": "PI"
-            },
-            {
-              "id": "david-holway",
-              "name": "David Holway",
-              "role": "PI"
-            },
-            {
-              "id": "amy-kiger",
-              "name": "Amy Kiger",
-              "role": "PI"
             }
           ]
         },
@@ -4083,40 +3977,6 @@
           ]
         },
         {
-          "id": "institute-for-genomic-medicine-igm",
-          "name": "Institute for Genomic Medicine (IGM)",
-          "website": "https://igm.ucsd.edu/faculty/kathleen-curtius",
-          "overview": "The Institute for Genomic Medicine aims to discover new pathways in human health and disease and translate these discoveries to clinical and preventive medicine through multidisciplinary research.",
-          "members": [
-            {
-              "id": "kelly-a-frazer",
-              "name": "Kelly A. Frazer",
-              "role": "PI",
-              "email": "kafrazer@health.ucsd.edu",
-              "photo": "https://igm.ucsd.edu/sites/default/files/images/Faculty/k_frazer.jpg"
-            },
-            {
-              "id": "elizabeth-winzeler",
-              "name": "Elizabeth Winzeler",
-              "role": "PI",
-              "photo": "https://igm.ucsd.edu/sites/default/files/styles/large/public/images/Faculty/winzeler.jpg"
-            },
-            {
-              "id": "alysson-r-muotri",
-              "name": "Alysson R. Muotri",
-              "role": "PI",
-              "photo": "https://igm.ucsd.edu/sites/default/files/styles/large/public/images/Faculty/muotri-alysson.jpg"
-            },
-            {
-              "id": "kathleen-curtius",
-              "name": "Kathleen Curtius",
-              "role": "PI",
-              "email": "kcurtius@health.ucsd.edu",
-              "photo": "https://igm.ucsd.edu/sites/default/files/images/Faculty/headshot_UCSD_profile.png"
-            }
-          ]
-        },
-        {
           "id": "uc-san-diego-department-of-radiology",
           "name": "UC San Diego Department of Radiology",
           "website": "https://radiology.ucsd.edu/research/faculty-areas/brain.html",
@@ -4185,38 +4045,6 @@
           ]
         },
         {
-          "id": "scripps-institution-of-oceanography",
-          "name": "Scripps Institution of Oceanography",
-          "website": "https://scripps.ucsd.edu/profiles/rshadwick",
-          "overview": "A research institution dedicated to understanding and protecting the planet through oceanographic, earth science, and climate research across multiple disciplines.",
-          "members": [
-            {
-              "id": "roger-revelle",
-              "name": "Roger Revelle",
-              "role": "PI",
-              "photo": "https://scripps.ucsd.edu/sites/default/files/profile_photo/exp_A_RoemmichArgo_095.jpg"
-            },
-            {
-              "id": "harald-sverdrup",
-              "name": "Harald Sverdrup",
-              "role": "PI",
-              "photo": "https://scripps.ucsd.edu/sites/default/files/styles/news_header_800x500_enforcer/public/2020-07/Scripps-History_Sverdrup-Munk.jpg?itok=usB4UpCE"
-            },
-            {
-              "id": "walter-munk",
-              "name": "Walter Munk",
-              "role": "PhD",
-              "photo": "https://scripps.ucsd.edu/sites/default/files/styles/news_header_800x500_enforcer/public/2020-07/Scripps-History_Sverdrup-Munk.jpg?itok=usB4UpCE"
-            },
-            {
-              "id": "charles-david-keeling",
-              "name": "Charles David Keeling",
-              "role": "Staff",
-              "photo": "https://scripps.ucsd.edu/sites/default/files/styles/news_header_800x500_enforcer/public/2020-08/Scripps-History_Charles-David-Keeling-Curve.jpg?itok=z81CKMy1"
-            }
-          ]
-        },
-        {
           "id": "hxi---human-centered-extended-intelligence-research-lab",
           "name": "HXI - Human-centered eXtended Intelligence Research Lab",
           "website": "https://hxi.ucsd.edu/author/sonia-jain/",
@@ -4272,50 +4100,6 @@
               "id": "janet-johnson",
               "name": "Janet Johnson",
               "role": "PhD"
-            }
-          ]
-        },
-        {
-          "id": "school-of-biological-sciences",
-          "name": "School of Biological Sciences",
-          "website": "https://biology.ucsd.edu/research/faculty/gsshadel",
-          "overview": "The School of Biological Sciences at UC San Diego conducts research across multiple biological disciplines, including biochemistry, cell biology, ecology, evolution, genetics, neurobiology, and more.",
-          "members": [
-            {
-              "id": "bret-no\u00ebl",
-              "name": "Bret No\u00ebl",
-              "role": "Staff",
-              "email": "bnoel@ucsd.edu"
-            },
-            {
-              "id": "jennifer-griffin",
-              "name": "Jennifer Griffin",
-              "role": "Staff",
-              "email": "jlgriffin@ucsd.edu"
-            },
-            {
-              "id": "teresa-wassum",
-              "name": "Teresa Wassum",
-              "role": "Staff",
-              "email": "twassum@ucsd.edu"
-            },
-            {
-              "id": "jude-poole",
-              "name": "Jude Poole",
-              "role": "Staff",
-              "email": "jpoole@ucsd.edu"
-            },
-            {
-              "id": "dana-brehm",
-              "name": "Dana Brehm",
-              "role": "Staff",
-              "email": "dbrehm@ucsd.edu"
-            },
-            {
-              "id": "sara-werner",
-              "name": "Sara Werner",
-              "role": "Staff",
-              "email": "slwerner@ucsd.edu"
             }
           ]
         },
@@ -5186,87 +4970,6 @@
           ]
         },
         {
-          "id": "chang-lab",
-          "name": "Chang Lab",
-          "website": "https://changlab.ucsd.edu/",
-          "overview": "The lab studies cellular and molecular mechanisms underlying T lymphocyte fate specification, focusing on how lymphocytes produce both terminally differentiated effector cells and self-renewing memory cells during immune responses.",
-          "members": [
-            {
-              "id": "john-chang",
-              "name": "John Chang",
-              "role": "PI",
-              "email": "changj@ucsd.edu",
-              "photo": "https://gastroenterology.ucsd.edu/_images/people/chang-john.jpeg"
-            },
-            {
-              "id": "cynthia-indralingam",
-              "name": "Cynthia Indralingam",
-              "role": "Staff",
-              "photo": "https://gastroenterology.ucsd.edu/research/labs/chang/_images/indralingam-cynthia.png"
-            },
-            {
-              "id": "william-wong",
-              "name": "William Wong",
-              "role": "Staff",
-              "photo": "https://gastroenterology.ucsd.edu/research/labs/chang/_images/wong-william.png"
-            },
-            {
-              "id": "priscilla-yao",
-              "name": "Priscilla Yao",
-              "role": "Staff",
-              "photo": "https://gastroenterology.ucsd.edu/research/labs/chang/_images/yao-priscilla.png"
-            },
-            {
-              "id": "paul-hsu",
-              "name": "Paul Hsu",
-              "role": "Postdoc",
-              "photo": "https://gastroenterology.ucsd.edu/research/labs/chang/_images/hsu-paul.jpeg"
-            },
-            {
-              "id": "elena-lin",
-              "name": "Elena Lin",
-              "role": "PhD",
-              "photo": "https://gastroenterology.ucsd.edu/research/labs/chang/_images/lin-elena.jpeg"
-            },
-            {
-              "id": "sara-vandenburgh",
-              "name": "Sara Vandenburgh",
-              "role": "PhD",
-              "photo": "https://gastroenterology.ucsd.edu/research/labs/chang/_images/vandenburgh-sara.jpeg"
-            },
-            {
-              "id": "lixin-sun",
-              "name": "Lixin Sun",
-              "role": "Masters",
-              "photo": "http://cdn.ucsd.edu/cms/decorator-5/img/profile-placeholder-sand-on-blue.jpg"
-            },
-            {
-              "id": "waverley-achacoso",
-              "name": "Waverley Achacoso",
-              "role": "Undergrad",
-              "photo": "http://cdn.ucsd.edu/cms/decorator-5/img/profile-placeholder-sand-on-blue.jpg"
-            },
-            {
-              "id": "kaitlyn-tran",
-              "name": "Kaitlyn Tran",
-              "role": "Undergrad",
-              "photo": "http://cdn.ucsd.edu/cms/decorator-5/img/profile-placeholder-sand-on-blue.jpg"
-            },
-            {
-              "id": "baldwin-liu",
-              "name": "Baldwin Liu",
-              "role": "Undergrad",
-              "photo": "http://cdn.ucsd.edu/cms/decorator-5/img/profile-placeholder-sand-on-blue.jpg"
-            },
-            {
-              "id": "allison-dong",
-              "name": "Allison Dong",
-              "role": "Undergrad",
-              "photo": "http://cdn.ucsd.edu/cms/decorator-5/img/profile-placeholder-sand-on-blue.jpg"
-            }
-          ]
-        },
-        {
           "id": "gianneschi-group",
           "name": "Gianneschi Group",
           "website": "https://www-chem.ucsd.edu/faculty/profiles/gianneschi_nathan_c.html",
@@ -5464,56 +5167,6 @@
               "name": "Nanzhi Zhang",
               "role": "PhD",
               "email": "nzang@eng.ucsd.edu"
-            }
-          ]
-        },
-        {
-          "id": "salk-institute-for-biological-studies",
-          "name": "Salk Institute for Biological Studies",
-          "website": "https://joyce.salk.edu/",
-          "overview": "The Salk Institute is an independent, nonprofit research institute focused on foundational research in areas like cancer, Alzheimer's disease, and agricultural challenges.",
-          "members": [
-            {
-              "id": "gerald-joyce",
-              "name": "Gerald Joyce",
-              "role": "PI",
-              "photo": "https://www.salk.edu/wp-content/uploads/2022/07/leadership-gerald-joyce-2207-300x300.jpg"
-            },
-            {
-              "id": "sue-bacino",
-              "name": "Sue Bacino",
-              "role": "Staff",
-              "photo": "https://www.salk.edu/wp-content/uploads/2022/05/sue-bacino-2205-300x300.jpg"
-            },
-            {
-              "id": "marie-carter-dubois",
-              "name": "Marie Carter-Dubois",
-              "role": "Staff",
-              "photo": "https://www.salk.edu/wp-content/uploads/2025/07/250717-pr-Marie-Carter-Dubois-homepage-300x300.jpg"
-            },
-            {
-              "id": "michelle-chamberlain",
-              "name": "Michelle Chamberlain",
-              "role": "Staff",
-              "photo": "https://www.salk.edu/wp-content/uploads/2025/09/michelle-chamberlain-300x300.jpg"
-            },
-            {
-              "id": "jan-karlseder",
-              "name": "Jan Karlseder",
-              "role": "PI",
-              "photo": "https://www.salk.edu/wp-content/uploads/2024/01/Karlsedar-Jan_0X8C0591-resizedsq-300x300.jpg"
-            },
-            {
-              "id": "julia-miller",
-              "name": "Julia Miller",
-              "role": "Staff",
-              "photo": "https://www.salk.edu/wp-content/uploads/2022/06/julia-miller-2206-300x300.jpg"
-            },
-            {
-              "id": "suzanne-page",
-              "name": "Suzanne Page",
-              "role": "Staff",
-              "photo": "https://www.salk.edu/wp-content/uploads/2024/10/elt-suzanne-page-300x300.jpg"
             }
           ]
         },
@@ -6280,27 +5933,6 @@
               "name": "Sardor Danier",
               "role": "PhD",
               "email": "sdanier@ucsd.edu"
-            }
-          ]
-        },
-        {
-          "id": "program-in-materials-science-and-engineering",
-          "name": "Program in Materials Science and Engineering",
-          "website": "https://matsci.ucsd.edu/faculty/geert-schmid-schoenbein",
-          "overview": "The Program in Materials Science and Engineering at UC San Diego is an interdisciplinary program focused on research and education in materials science across multiple departments.",
-          "members": [
-            {
-              "id": "olivia-a-graeve",
-              "name": "Olivia A. Graeve",
-              "role": "PI",
-              "photo": "https://matsci.ucsd.edu/sites/default/files/inline-images/PictureGraeve2%20%282%29.jpg"
-            },
-            {
-              "id": "geert-w-schmid-schoenbein",
-              "name": "Geert W. Schmid-Schoenbein",
-              "role": "PI",
-              "email": "gschmid@ucsd.edu",
-              "photo": "https://matsci.ucsd.edu/sites/default/files/profile-photos/gSchmid-Schoenbein.jpg"
             }
           ]
         },

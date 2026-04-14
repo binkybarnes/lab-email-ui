@@ -16,29 +16,28 @@ const baseModal = {
   open: true,
   members: [member],
   currentIndex: 0,
-  drafts: { 'sarah-chen': { subject: 'Hello', body: 'Hi there' } },
 }
 
 describe('EmailModal', () => {
   it('renders recipient name', () => {
     render(
-      <EmailModal modal={baseModal} onClose={() => {}} onUpdateDraft={() => {}} onNavigate={() => {}} />
+      <EmailModal modal={baseModal} onClose={() => {}} onNavigate={() => {}} />
     )
     expect(screen.getByText(/Dr. Sarah Chen/)).toBeInTheDocument()
   })
 
-  it('shows subject and body from draft', () => {
+  it('shows empty subject and body inputs on open', () => {
     render(
-      <EmailModal modal={baseModal} onClose={() => {}} onUpdateDraft={() => {}} onNavigate={() => {}} />
+      <EmailModal modal={baseModal} onClose={() => {}} onNavigate={() => {}} />
     )
-    expect(screen.getByDisplayValue('Hello')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Hi there')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Subject line...')).toHaveValue('')
+    expect(screen.getByPlaceholderText('Write your email...')).toHaveValue('')
   })
 
   it('calls onClose when Escape pressed', () => {
     const onClose = vi.fn()
     render(
-      <EmailModal modal={baseModal} onClose={onClose} onUpdateDraft={() => {}} onNavigate={() => {}} />
+      <EmailModal modal={baseModal} onClose={onClose} onNavigate={() => {}} />
     )
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(onClose).toHaveBeenCalled()
@@ -46,7 +45,7 @@ describe('EmailModal', () => {
 
   it('does not render when open is false', () => {
     render(
-      <EmailModal modal={{ ...baseModal, open: false }} onClose={() => {}} onUpdateDraft={() => {}} onNavigate={() => {}} />
+      <EmailModal modal={{ ...baseModal, open: false }} onClose={() => {}} onNavigate={() => {}} />
     )
     expect(screen.queryByText(/Dr. Sarah Chen/)).not.toBeInTheDocument()
   })

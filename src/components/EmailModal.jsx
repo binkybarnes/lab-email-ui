@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { sendEmail } from '../utils/gmailApi'
 import { supabase } from '../lib/supabase'
 
@@ -40,18 +40,31 @@ async function dispatchEmail({ member, draft, accessToken, senderEmail }) {
   return result
 }
 
-export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, accessToken, senderEmail }) {
-  const { open, members, currentIndex, drafts } = modal
+function buildDrafts(members) {
+  return Object.fromEntries(members.map(m => [m.id, { subject: '', body: '', toOverride: '' }]))
+}
+
+export default function EmailModal({ modal, onClose, onNavigate, accessToken, senderEmail }) {
+  const { open, members, currentIndex } = modal
+  const [drafts, setDrafts] = useState({})
   const [sending, setSending] = useState(false)
   const [results, setResults] = useState({}) // memberId -> { ok, error }
+  const prevMembersRef = useRef(null)
 
+  // Re-initialize drafts only when the member list changes (new modal open)
   useEffect(() => {
     if (!open) return
-    return () => {
+    if (prevMembersRef.current !== members) {
+      prevMembersRef.current = members
+      setDrafts(buildDrafts(members))
       setResults({})
       setSending(false)
     }
-  }, [open])
+  }, [open, members])
+
+  function updateDraft(memberId, field, value) {
+    setDrafts(prev => ({ ...prev, [memberId]: { ...prev[memberId], [field]: value } }))
+  }
 
   useEffect(() => {
     if (!open) return
@@ -91,7 +104,7 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+      style={{ background: 'rgba(0,0,0,0.6)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
@@ -183,7 +196,7 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
               <input
                 type="email"
                 value={draft.toOverride ?? ''}
-                onChange={e => onUpdateDraft(member.id, 'toOverride', e.target.value)}
+                onChange={e => updateDraft(member.id, 'toOverride', e.target.value)}
                 placeholder={`Enter email for ${member.name}...`}
                 style={{ ...INPUT_STYLE, borderColor: '#f87171' }}
                 onFocus={e => e.target.style.borderColor = '#4d6dff'}
@@ -198,7 +211,7 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
             <input
               type="text"
               value={draft.subject}
-              onChange={e => onUpdateDraft(member.id, 'subject', e.target.value)}
+              onChange={e => updateDraft(member.id, 'subject', e.target.value)}
               placeholder="Subject line..."
               style={INPUT_STYLE}
               onFocus={e => e.target.style.borderColor = '#4d6dff'}
@@ -211,7 +224,7 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
             <label className="text-xs text-muted block mb-1">Body</label>
             <textarea
               value={draft.body}
-              onChange={e => onUpdateDraft(member.id, 'body', e.target.value)}
+              onChange={e => updateDraft(member.id, 'body', e.target.value)}
               placeholder="Write your email..."
               rows={10}
               style={{ ...INPUT_STYLE, resize: 'none', fontSize: 12 }}

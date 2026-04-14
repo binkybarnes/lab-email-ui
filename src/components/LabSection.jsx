@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import MemberCard from './MemberCard'
 
-export default function LabSection({ lab, roleFilter, selectedMemberIds, onToggleMember, onToggleLabMembers, onEmail, anySelected }) {
+function LabSection({ lab, roleFilter, selectedMemberIds, onToggleMember, onToggleLabMembers, onEmail, anySelected }) {
   const [isOpen, setIsOpen] = useState(true)
 
   const members = roleFilter === 'all'
@@ -20,11 +20,9 @@ export default function LabSection({ lab, roleFilter, selectedMemberIds, onToggl
   }
 
   return (
-    <motion.section
+    <section
       className="mb-6"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '0 200px' }}
     >
       <div className="flex items-center gap-2 mb-2 group cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
         <input
@@ -36,24 +34,8 @@ export default function LabSection({ lab, roleFilter, selectedMemberIds, onToggl
           style={{
             borderColor: allSelected ? '#4d6dff' : someSelected ? '#637ae6' : '#52586a',
             backgroundColor: allSelected ? '#4d6dff' : someSelected ? 'rgba(77,109,255,0.2)' : 'transparent',
-            display: 'grid',
-            placeItems: 'center',
-            backgroundImage: 'none'
           }}
         />
-        {/* Custom checkmark/minus overlay */}
-        <div
-          className="absolute pointer-events-none flex items-center justify-center w-4 h-4"
-          style={{ opacity: (allSelected || someSelected) ? 1 : 0 }}
-        >
-          {allSelected ? (
-            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          ) : (
-            <div className="w-2 h-0.5 bg-[#7b9fff] rounded-full" />
-          )}
-        </div>
 
         <div className="flex-1 flex items-center gap-2">
           <h2 className="text-md font-semibold text-primary font-serif">
@@ -126,6 +108,14 @@ export default function LabSection({ lab, roleFilter, selectedMemberIds, onToggl
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.section>
+    </section>
   )
 }
+
+export default memo(LabSection, (prev, next) => {
+  if (prev.roleFilter !== next.roleFilter) return false
+  if (prev.anySelected !== next.anySelected) return false
+  if (prev.lab !== next.lab) return false
+  const ids = prev.lab.members.map(m => m.id)
+  return ids.every(id => prev.selectedMemberIds.has(id) === next.selectedMemberIds.has(id))
+})

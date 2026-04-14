@@ -14,7 +14,9 @@ function getInitials(name) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
-export default function MemberCard({ member, selected, onToggle, onEmail, anySelected, isLast }) {
+import { memo } from 'react'
+
+function MemberCard({ member, selected, onToggle, onEmail, anySelected, isLast }) {
   const cfg = ROLE_CONFIG[member.role] ?? ROLE_CONFIG.Undergrad
 
   return (
@@ -40,7 +42,7 @@ export default function MemberCard({ member, selected, onToggle, onEmail, anySel
         style={{ background: cfg.bg, color: cfg.text }}
       >
         {member.photo
-          ? <img src={member.photo} alt={member.name} className="w-full h-full object-cover" style={{ borderRadius: '3px' }} />
+          ? <img src={member.photo} alt={member.name} loading="lazy" className="w-full h-full object-cover" style={{ borderRadius: '3px' }} />
           : getInitials(member.name)
         }
       </div>
@@ -97,3 +99,5 @@ export default function MemberCard({ member, selected, onToggle, onEmail, anySel
     </div>
   )
 }
+
+export default memo(MemberCard)

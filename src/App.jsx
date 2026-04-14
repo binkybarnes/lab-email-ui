@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useDeferredValue, useState } from 'react'
 import { AnimatePresence } from 'motion/react'
 import { useAppState } from './hooks/useAppState'
 import { useAuth } from './hooks/useAuth'
@@ -30,10 +30,10 @@ export default function App() {
     clearSelection,
     openEmailModal,
     closeEmailModal,
-    updateDraft,
     navigateModal,
   } = useAppState()
 
+  const deferredVisibleLabs = useDeferredValue(visibleLabs)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(true)
   const showCheckout = selectedMembers.length > 0
   const rightOffset = showCheckout ? (isCheckoutOpen ? '18.2rem' : '3.7rem') : '0'
@@ -58,7 +58,7 @@ export default function App() {
       />
       <LabBrowser
         data={data}
-        visibleLabs={visibleLabs}
+        visibleLabs={deferredVisibleLabs}
         roleFilter={roleFilter}
         setRoleFilter={setRoleFilter}
         selectedMemberIds={selectedMemberIds}
@@ -84,7 +84,6 @@ export default function App() {
       <EmailModal
         modal={emailModal}
         onClose={closeEmailModal}
-        onUpdateDraft={updateDraft}
         onNavigate={navigateModal}
         accessToken={session.provider_token}
         senderEmail={session.user.email}
