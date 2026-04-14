@@ -8,6 +8,7 @@ import LabBrowser from './components/LabBrowser'
 import CheckoutSidebar from './components/CheckoutSidebar'
 import EmailModal from './components/EmailModal'
 import LoginScreen from './components/LoginScreen'
+import DisclaimerModal from './components/DisclaimerModal'
 
 export default function App() {
   const { session, loading, signIn, signOut } = useAuth()
@@ -88,6 +89,7 @@ export default function App() {
         accessToken={session.provider_token}
         senderEmail={session.user.email}
       />
+      <DisclaimerModal />
     </div>
   )
 }

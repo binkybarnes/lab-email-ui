@@ -42,7 +42,7 @@ export default function LabSection({ lab, roleFilter, selectedMemberIds, onToggl
           }}
         />
         {/* Custom checkmark/minus overlay */}
-        <div 
+        <div
           className="absolute pointer-events-none flex items-center justify-center w-4 h-4"
           style={{ opacity: (allSelected || someSelected) ? 1 : 0 }}
         >
@@ -54,7 +54,7 @@ export default function LabSection({ lab, roleFilter, selectedMemberIds, onToggl
             <div className="w-2 h-0.5 bg-[#7b9fff] rounded-full" />
           )}
         </div>
-        
+
         <div className="flex-1 flex items-center gap-2">
           <h2 className="text-md font-semibold text-primary font-serif">
             {lab.name}
@@ -75,7 +75,7 @@ export default function LabSection({ lab, roleFilter, selectedMemberIds, onToggl
             </a>
           )}
         </div>
-        
+
         <button
           className="p-1 hover:bg-[#272b34] text-primary transition-colors rounded flex-shrink-0"
           title={isOpen ? 'Collapse Lab' : 'Expand Lab'}
