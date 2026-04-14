@@ -77,6 +77,13 @@ describe('useAuth', () => {
     expect(mockSignOut).toHaveBeenCalled()
   })
 
+  it('sets loading:false even when getSession rejects', async () => {
+    mockGetSession.mockRejectedValue(new Error('network'))
+    const { result } = renderHook(() => useAuth())
+    await act(async () => {})
+    expect(result.current.loading).toBe(false)
+  })
+
   it('unsubscribes on unmount', async () => {
     const { unmount } = renderHook(() => useAuth())
     await act(async () => {})
