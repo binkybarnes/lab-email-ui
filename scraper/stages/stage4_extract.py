@@ -148,7 +148,7 @@ async def run() -> None:
     md_files = list(CRAWLED_DIR.glob("*.md"))
     print(f"  {len(md_files)} pages to extract")
 
-    CONCURRENCY = 5
+    CONCURRENCY = 20
     semaphore = asyncio.Semaphore(CONCURRENCY)
     results = []
     empty_count = 0
