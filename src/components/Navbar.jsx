@@ -1,4 +1,4 @@
-export default function Navbar({ selectedCount = 0, rightOffset = '0' }) {
+export default function Navbar({ selectedCount = 0, rightOffset = '0', user = null, onSignOut }) {
   return (
     <header
       className="fixed top-0 left-0 z-50 flex items-center justify-between px-6 h-14 transition-all duration-300"
@@ -10,27 +10,42 @@ export default function Navbar({ selectedCount = 0, rightOffset = '0' }) {
       }}
     >
       <div className="flex items-baseline gap-3">
-        <span
-          className="text-primary font-semibold text-2xl tracking-tight font-serif"
-        >
+        <span className="text-primary font-semibold text-2xl tracking-tight font-serif">
           UCSD Lab Browser
         </span>
       </div>
 
-      {selectedCount > 0 && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="text-xs  px-2.5 py-0.5 rounded"
-          style={{
-            background: 'rgba(77,109,255,0.15)',
-            color: '#7b9fff',
-            border: '1px solid rgba(77,109,255,0.3)',
-          }}
-        >
-          {selectedCount} selected
-        </div>
-      )}
+      <div className="flex items-center gap-3">
+        {selectedCount > 0 && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="text-xs px-2.5 py-0.5 rounded"
+            style={{
+              background: 'rgba(77,109,255,0.15)',
+              color: '#7b9fff',
+              border: '1px solid rgba(77,109,255,0.3)',
+            }}
+          >
+            {selectedCount} selected
+          </div>
+        )}
+
+        {user && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted">{user.email}</span>
+            <button
+              onClick={onSignOut}
+              className="text-xs px-2.5 py-1 text-muted transition-colors"
+              style={{ border: '1px solid #363b47', borderRadius: '3px', background: 'transparent' }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#272b34'; e.currentTarget.style.color = '#e4e7ed' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '' }}
+            >
+              sign out
+            </button>
+          </div>
+        )}
+      </div>
     </header>
   )
 }
