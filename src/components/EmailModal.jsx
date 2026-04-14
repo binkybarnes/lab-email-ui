@@ -138,7 +138,7 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
                   color: currentResult.ok ? '#4ade80' : '#f87171',
                 }}
               >
-                {currentResult.ok ? 'sent' : 'failed'}
+                {currentResult.ok ? 'sent ✓' : 'failed'}
               </span>
             )}
           </div>
@@ -155,6 +155,17 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
 
         {/* Form */}
         <div className="flex flex-col gap-3 px-5 py-4 overflow-y-auto flex-1">
+          {/* Error banner */}
+          {currentResult && !currentResult.ok && (
+            <div
+              className="text-xs px-3 py-2"
+              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '3px', color: '#f87171' }}
+            >
+              {/401|unauthorized|invalid.?cred/i.test(currentResult.error)
+                ? 'Session expired — sign out and sign back in to refresh your Gmail access.'
+                : currentResult.error}
+            </div>
+          )}
           {/* To */}
           <div>
             <label className="text-xs text-muted block mb-1">To</label>
