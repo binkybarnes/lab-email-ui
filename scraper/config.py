@@ -16,3 +16,5 @@ FACULTY_FILE = DATA_DIR / "faculty.json"
 FACULTY_URLS_FILE = DATA_DIR / "faculty_with_urls.json"
 LABS_RAW_FILE = DATA_DIR / "labs_raw.json"
 LABS_OUTPUT_FILE = OUTPUT_DIR / "labs.json"
+
+PROFILES_CSV = Path(__file__).parent.parent / "src" / "data" / "profiles.csv"
