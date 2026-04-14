@@ -23,7 +23,7 @@ async function dispatchEmail({ member, draft, accessToken, senderEmail }) {
     accessToken,
   })
 
-  await supabase.from('email_logs').insert({
+  const { error: logError } = await supabase.from('email_logs').insert({
     sender_email: senderEmail,
     recipient_email: member.email,
     recipient_name: member.name,
@@ -32,6 +32,7 @@ async function dispatchEmail({ member, draft, accessToken, senderEmail }) {
     status: result.ok ? 'sent' : 'failed',
     error: result.ok ? null : result.error,
   })
+  if (logError) console.error('[email_logs] insert failed:', logError.message)
 
   return result
 }
@@ -72,6 +73,7 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
   async function handleSendAll() {
     setSending(true)
     for (const m of members) {
+      if (results[m.id]?.ok) continue
       const d = drafts[m.id] ?? { subject: '', body: '' }
       const result = await dispatchEmail({ member: m, draft: d, accessToken, senderEmail })
       setResults(prev => ({ ...prev, [m.id]: result }))
