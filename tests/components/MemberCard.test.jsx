@@ -31,10 +31,13 @@ describe('MemberCard', () => {
     expect(onToggle).toHaveBeenCalledWith('sarah-chen')
   })
 
-  it('calls onEmail with member array when Email button clicked', () => {
-    const onEmail = vi.fn()
-    render(<MemberCard member={member} selected={false} onToggle={() => {}} onEmail={onEmail} anySelected={false} />)
-    fireEvent.click(screen.getByRole('button', { name: /email/i }))
-    expect(onEmail).toHaveBeenCalledWith([member])
+  it('renders Add + button when not selected', () => {
+    render(<MemberCard member={member} selected={false} onToggle={() => {}} onEmail={() => {}} anySelected={false} />)
+    expect(screen.getByText('Add +')).toBeInTheDocument()
+  })
+
+  it('renders Added ✓ button when selected', () => {
+    render(<MemberCard member={member} selected={true} onToggle={() => {}} onEmail={() => {}} anySelected={false} />)
+    expect(screen.getByText('Added ✓')).toBeInTheDocument()
   })
 })
