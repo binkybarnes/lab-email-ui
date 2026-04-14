@@ -5,135 +5,487 @@
       "name": "Computer Science & Engineering",
       "labs": [
         {
-          "id": "ai-lab",
-          "name": "Artificial Intelligence Lab",
-          "url": "https://cse.ucsd.edu/research/ai-lab",
+          "id": "shu-chien-gene-lay-department-of-bioengineering",
+          "name": "Shu Chien-Gene Lay Department of Bioengineering",
+          "website": "https://bioengineering.ucsd.edu/content/shankar-subramaniam",
+          "overview": "The department applies engineering principles to scientific discovery and technology innovation, with research focusing on multiscale bioengineering, tissue engineering, regenerative medicine, and systems biology and medicine.",
           "members": [
             {
-              "id": "sarah-chen",
-              "name": "Dr. Sarah Chen",
+              "id": "adam-engler",
+              "name": "Adam Engler",
               "role": "PI",
-              "email": "schen@ucsd.edu",
-              "photo": null,
-              "linkedin": "https://linkedin.com/in/sarahchen",
-              "scholar": "https://scholar.google.com/citations?user=abc123"
+              "email": "bechair@ucsd.edu"
             },
             {
-              "id": "michael-rodriguez",
-              "name": "Michael Rodriguez", 
-              "role": "PhD",
-              "email": "mrodriguez@ucsd.edu",
-              "photo": null,
-              "linkedin": "https://linkedin.com/in/mrodriguez",
-              "scholar": null
+              "id": "vanessa-hollingsworth",
+              "name": "Vanessa Hollingsworth",
+              "role": "Staff",
+              "email": "vkhollin@ucsd.edu"
             },
             {
-              "id": "emily-zhang",
-              "name": "Emily Zhang",
-              "role": "PhD",
-              "email": "ezhang@ucsd.edu",
-              "photo": null,
-              "linkedin": null,
-              "scholar": "https://scholar.google.com/citations?user=def456"
+              "id": "sandra-marqas",
+              "name": "Sandra Marqas",
+              "role": "Staff",
+              "email": "be-phdadvising-g@ucsd.edu"
             },
             {
-              "id": "james-kim",
-              "name": "James Kim",
-              "role": "Postdoc",
-              "email": "jkim@ucsd.edu",
-              "photo": null,
-              "linkedin": "https://linkedin.com/in/jameskim",
-              "scholar": "https://scholar.google.com/citations?user=ghi789"
+              "id": "maddie-clement",
+              "name": "Maddie Clement",
+              "role": "Staff",
+              "email": "be-mastersadvising-g@ucsd.edu"
+            },
+            {
+              "id": "kelly-bailey",
+              "name": "Kelly Bailey",
+              "role": "Staff",
+              "email": "kcbailey@ucsd.edu"
+            },
+            {
+              "id": "justine-garcia",
+              "name": "Justine Garcia",
+              "role": "Staff",
+              "email": "be-gradfunding-g@ucsd.edu"
+            },
+            {
+              "id": "amber-christensen",
+              "name": "Amber Christensen",
+              "role": "Staff",
+              "email": "alchristensen@ucsd.edu"
             }
           ]
         },
         {
-          "id": "csl",
-          "name": "Computer Systems Lab",
-          "url": "https://cse.ucsd.edu/research/csl",
+          "id": "opella-lab",
+          "name": "Opella Lab",
+          "website": "https://www-chem.ucsd.edu/faculty/profiles/opella_stanley_j.html",
+          "overview": "The lab focuses on NMR structural studies of proteins in membranes and supramolecular assemblies, with a particular interest in membrane proteins and developing NMR spectroscopy methods.",
           "members": [
             {
-              "id": "david-park",
-              "name": "Dr. David Park",
+              "id": "stanley-opella",
+              "name": "Stanley Opella",
               "role": "PI",
-              "email": "dpark@ucsd.edu",
-              "photo": null,
-              "linkedin": "https://linkedin.com/in/davidpark",
-              "scholar": "https://scholar.google.com/citations?user=jkl012"
+              "email": "sopella@ucsd.edu",
+              "photo": "https://www-chem.ucsd.edu/_images/faculty-profiles/photos/opella_stanley_j_115_164.jpg?1776095108508"
             },
             {
-              "id": "anna-torres",
-              "name": "Anna Torres",
-              "role": "MS",
-              "email": "atorres@ucsd.edu",
-              "photo": null,
-              "linkedin": "https://linkedin.com/in/annatorres",
-              "scholar": null
+              "id": "anna-adele-de-angelis",
+              "name": "Anna Adele De Angelis",
+              "role": "Staff",
+              "email": "adeangel@ucsd.edu"
+            },
+            {
+              "id": "sang-ho-park",
+              "name": "Sang Ho Park",
+              "role": "Staff",
+              "email": "shpark27@ucsd.edu"
             }
           ]
         },
         {
-          "id": "hci-lab",
-          "name": "Human-Computer Interaction Lab",
-          "url": "https://cse.ucsd.edu/research/hci-lab",
+          "id": "jacobs-school-of-engineering",
+          "name": "Jacobs School of Engineering",
+          "website": "https://jacobsschool.ucsd.edu/people/profile/nathan-lewis",
+          "overview": "The Jacobs School of Engineering at UC San Diego is a top-ranked engineering school that conducts leading research across six academic departments, focusing on interdisciplinary innovation and technology transfer.",
           "members": [
             {
-              "id": "lisa-park",
-              "name": "Dr. Lisa Park",
+              "id": "albert-p-pisano",
+              "name": "Albert P. Pisano",
               "role": "PI",
-              "email": "lpark@ucsd.edu",
-              "photo": null,
-              "linkedin": "https://linkedin.com/in/lisapark",
-              "scholar": "https://scholar.google.com/citations?user=mno345"
+              "photo": "https://jacobsschool.ucsd.edu/sites/default/files/groups/jsoe/img/people/leadership/Pisano-2109-05672-e-800p.jpg"
             },
             {
-              "id": "ryan-nguyen",
-              "name": "Ryan Nguyen",
+              "id": "karen-l-christman",
+              "name": "Karen L. Christman",
+              "role": "PI",
+              "photo": "https://jacobsschool.ucsd.edu/sites/default/files/groups/jsoe/img/about/leadership/Christman.jpeg"
+            },
+            {
+              "id": "bill-lin",
+              "name": "Bill Lin",
+              "role": "PI",
+              "photo": "https://jacobsschool.ucsd.edu/sites/default/files/inline-images/UCSD-JacobsSchool-2309-Lin_Bill-resized.png"
+            },
+            {
+              "id": "lelli-van-den-einde",
+              "name": "Lelli Van Den Einde",
+              "role": "PI",
+              "photo": "https://jacobsschool.ucsd.edu/sites/default/files/inline-images/UCSD-JacobsSchool-2506-Van_Den_Einde_Lelli-07079-8MP%20480x.jpg"
+            },
+            {
+              "id": "andrea-tao",
+              "name": "Andrea Tao",
+              "role": "PI",
+              "photo": "https://jacobsschool.ucsd.edu/sites/default/files/groups/jsoe/img/about/leadership/UCSD-JacobsSchool-2406-Tao_Andrea-05324-e-2MP.jpg"
+            },
+            {
+              "id": "arnetha-whitmore",
+              "name": "Arnetha Whitmore",
+              "role": "Staff",
+              "photo": "https://jacobsschool.ucsd.edu/sites/default/files/inline-images/Arnetha_Whitmore_crop_1_resized.png"
+            },
+            {
+              "id": "nathan-e-lewis",
+              "name": "Nathan E. Lewis",
+              "role": "PI",
+              "email": "n4lewis@ucsd.edu",
+              "photo": "https://jacobsschool.ucsd.edu/sites/default/files/groups/jsoe/img/people/faculty-profiles/445.jpg"
+            }
+          ]
+        },
+        {
+          "id": "flame-fluids-energy-lab",
+          "name": "Flame-Fluids-Energy Lab",
+          "website": "https://saha-lab.eng.ucsd.edu/",
+          "overview": "The Saha Research Group focuses on the fundamentals of fluid mechanics and combustion physics, using carefully designed experiments to study multi-scale, multi-physics problems relevant to advanced propulsion, clean energy, fire safety, and future-generation printing technology.",
+          "members": [
+            {
+              "id": "abhishek-saha",
+              "name": "Abhishek Saha",
+              "role": "PI",
+              "email": "asaha@ucsd.edu"
+            },
+            {
+              "id": "aditya-potnis",
+              "name": "Aditya Potnis",
               "role": "PhD",
-              "email": "rnguyen@ucsd.edu",
-              "photo": null,
-              "linkedin": "https://linkedin.com/in/ryannguyen",
-              "scholar": null
+              "email": "apotnis@eng.ucsd.edu"
             },
             {
-              "id": "sofia-wu",
-              "name": "Sofia Wu",
+              "id": "yue-weng",
+              "name": "Yue Weng",
+              "role": "PhD",
+              "email": "y9weng@eng.ucsd.edu"
+            },
+            {
+              "id": "sombuddha-bagchi",
+              "name": "Sombuddha Bagchi",
+              "role": "PhD",
+              "email": "sobagchi@eng.ucsd.edu"
+            },
+            {
+              "id": "brooklyn-asai",
+              "name": "Brooklyn Asai",
+              "role": "PhD",
+              "email": "basai@ucsd.edu"
+            },
+            {
+              "id": "jose-rivera-lizarralde",
+              "name": "Jose Rivera-lizarralde",
+              "role": "PhD",
+              "email": "j1rivera@ucsd.edu"
+            },
+            {
+              "id": "blake-andersen",
+              "name": "Blake Andersen",
+              "role": "Masters",
+              "email": "banderse@ucsd.edu"
+            },
+            {
+              "id": "yihong-zhu",
+              "name": "Yihong Zhu",
               "role": "Undergrad",
-              "email": "swu@ucsd.edu",
-              "photo": null,
-              "linkedin": null,
-              "scholar": null
+              "email": "yiz141@ucsd.edu"
             }
           ]
-        }
-      ]
-    },
-    {
-      "id": "ece",
-      "name": "Electrical & Computer Engineering",
-      "labs": [
+        },
         {
-          "id": "wireless-lab",
-          "name": "Wireless Systems Lab",
-          "url": "https://ece.ucsd.edu/research/wireless-lab",
+          "id": "ideker-laboratory",
+          "name": "Ideker Laboratory",
+          "website": "https://idekerlab.ucsd.edu/trey-ideker/",
+          "overview": "The Ideker Lab is a dynamic research group focused on systems biology, computational biology, genomics, machine learning, and research into cancer and neuropsychiatric diseases.",
           "members": [
             {
-              "id": "chen-wei",
-              "name": "Dr. Chen Wei",
+              "id": "trey-ideker",
+              "name": "Trey Ideker",
               "role": "PI",
-              "email": "cwei@ucsd.edu",
-              "photo": null,
-              "linkedin": "https://linkedin.com/in/chenwei",
-              "scholar": "https://scholar.google.com/citations?user=pqr678"
+              "email": "tideker@ucsd.edu"
             },
             {
-              "id": "priya-sharma",
-              "name": "Priya Sharma",
+              "id": "kate-licon",
+              "name": "Kate Licon",
+              "role": "Staff"
+            },
+            {
+              "id": "charlotte-marquez",
+              "name": "Charlotte Marquez",
+              "role": "Staff"
+            },
+            {
+              "id": "jillian-parker",
+              "name": "Jillian Parker",
+              "role": "Staff"
+            },
+            {
+              "id": "jing-chen",
+              "name": "Jing Chen",
+              "role": "Staff"
+            },
+            {
+              "id": "jane-yang",
+              "name": "Jane Yang",
+              "role": "Postdoc"
+            },
+            {
+              "id": "leah-schaffer",
+              "name": "Leah Schaffer",
+              "role": "Postdoc"
+            },
+            {
+              "id": "maayan-baron",
+              "name": "Maayan Baron",
+              "role": "Postdoc"
+            }
+          ]
+        },
+        {
+          "id": "burkart-laboratory",
+          "name": "Burkart Laboratory",
+          "website": "https://burkartlab.ucsd.edu/",
+          "overview": "The Burkart Lab studies secondary metabolite biosynthesis, focusing on enzymatic megasynthases responsible for synthesizing fatty acids, polyketides, and nonribosomal peptides through protein-protein interaction research.",
+          "members": [
+            {
+              "id": "michael-d-burkart",
+              "name": "Michael D. Burkart",
+              "role": "PI",
+              "email": "mburkart@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/mike-photo-600x600.jpg"
+            },
+            {
+              "id": "graham-heberlig",
+              "name": "Graham Heberlig",
+              "role": "Postdoc",
+              "email": "gwheberlig@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/photo-g-heberlig-2-552x674.jpeg"
+            },
+            {
+              "id": "satyam-khanal",
+              "name": "Satyam Khanal",
+              "role": "Postdoc",
+              "email": "skhanal@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/satyam-4-599x754.jpeg"
+            },
+            {
+              "id": "matthew-halloran",
+              "name": "Matthew Halloran",
+              "role": "Postdoc",
+              "email": "mwhalloran@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/img-1493-1-599x709.jpg"
+            },
+            {
+              "id": "aanchal-jaisingh",
+              "name": "Aanchal Jaisingh",
+              "role": "Postdoc",
+              "email": "ajaisingh@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/img-2777-599x799.jpeg"
+            },
+            {
+              "id": "tengyun-wei",
+              "name": "Tengyun Wei",
+              "role": "Postdoc",
+              "email": "wtengyun@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/img-3636-599x799.jpeg"
+            },
+            {
+              "id": "jeffrey-chen",
+              "name": "Jeffrey Chen",
+              "role": "Undergrad",
+              "email": "jac003@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/jeff-1-428x540.jpeg"
+            },
+            {
+              "id": "desirae-mellor",
+              "name": "Desirae Mellor",
+              "role": "Undergrad",
+              "email": "damellor@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/img-934-580x737.jpeg"
+            },
+            {
+              "id": "arthur-altunc",
+              "name": "Arthur Altunc",
+              "role": "Undergrad",
+              "email": "aaltunc@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/arthur-599x749.jpg"
+            },
+            {
+              "id": "ziran-jiang",
+              "name": "Ziran Jiang",
+              "role": "Undergrad",
+              "email": "zij002@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/ziran-7-561x755.jpeg"
+            },
+            {
+              "id": "yixing-suo",
+              "name": "Yixing Suo",
+              "role": "Undergrad",
+              "email": "ysuo@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/img-1519-1-599x666.jpg"
+            },
+            {
+              "id": "aaron-bruckbauer",
+              "name": "Aaron Bruckbauer",
+              "role": "Undergrad",
+              "email": "abruckbauer@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/img-3096-599x712.png"
+            },
+            {
+              "id": "caitlin-hudecek",
+              "name": "Caitlin Hudecek",
+              "role": "Undergrad",
+              "email": "chudecek@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/caitlin-hudecek-headshot-5-443x620.jpeg"
+            },
+            {
+              "id": "matthew-miyada",
+              "name": "Matthew Miyada",
+              "role": "Undergrad",
+              "email": "mmiyada@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/img-1510-599x673.jpg"
+            },
+            {
+              "id": "yuta-moriuchi",
+              "name": "Yuta Moriuchi",
+              "role": "Undergrad",
+              "email": "ymoriuchi@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/img-1513-1-599x724.jpeg"
+            },
+            {
+              "id": "emily-smith",
+              "name": "Emily Smith",
+              "role": "Undergrad",
+              "email": "ers001@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/img-1501-1-599x669.jpg"
+            },
+            {
+              "id": "vivian-wu",
+              "name": "Vivian Wu",
+              "role": "Undergrad",
+              "email": "siw035@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/img-1536-599x724.jpeg"
+            },
+            {
+              "id": "katy-wnuk-fink",
+              "name": "Katy Wnuk-Fink",
+              "role": "Undergrad",
+              "email": "kwnukfink@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/img-1490-1-599x738.jpg"
+            },
+            {
+              "id": "crisandra-jade-diaz",
+              "name": "Crisandra Jade Diaz",
+              "role": "Undergrad",
+              "email": "cjdiaz@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/img-1503-1-599x754.jpeg"
+            },
+            {
+              "id": "sanjana-pesari",
+              "name": "Sanjana Pesari",
+              "role": "Undergrad",
+              "email": "spesari@ucsd.edu",
+              "photo": "https://burkartlab.ucsd.edu/assets/images/img-3617-599x799.jpeg"
+            }
+          ]
+        },
+        {
+          "id": "steinmetz-lab",
+          "name": "Steinmetz Lab",
+          "website": "https://www.steinmetzlab.com/",
+          "overview": "The Steinmetz Lab researches plant virus nanotechnology for human and plant health, focusing on developing nanomaterials and biologics derived from plant viruses for applications in cancer immunotherapy, drug delivery, and precision farming.",
+          "members": [
+            {
+              "id": "nicole-f-steinmetz",
+              "name": "Nicole F. Steinmetz",
+              "role": "PI",
+              "photo": "https://images.squarespace-cdn.com/content/v1/67b0a449273eb817e2f28b90/a3089729-6929-46c6-bc45-b1ec458370bb/UCSD_Logo.png"
+            },
+            {
+              "id": "ivonne-gonz\u00e1lez-gamboa",
+              "name": "Ivonne Gonz\u00e1lez Gamboa",
+              "role": "Staff",
+              "photo": "https://images.squarespace-cdn.com/content/v1/67b0a449273eb817e2f28b90/0fb5e7ba-fa1a-45f2-8fa6-b22424bb3fbf/Ivonne.png"
+            },
+            {
+              "id": "marnie-aagard",
+              "name": "Marnie Aagard",
+              "role": "Staff",
+              "photo": "https://images.squarespace-cdn.com/content/v1/67b0a449273eb817e2f28b90/0d29bf3d-4fb2-414f-bc22-25ed6cb72090/Marnie+Agaard_Opt-Crop.jpg"
+            },
+            {
+              "id": "jessica-fernanda-affonso-de-oliveira",
+              "name": "Jessica Fernanda Affonso de Oliveira",
+              "role": "Postdoc",
+              "photo": "https://images.squarespace-cdn.com/content/v1/67b0a449273eb817e2f28b90/3bf6f4a9-70dd-4eef-803f-464f4bd30fc9/Jessica-de-Olveira_Opt.jpg"
+            },
+            {
+              "id": "jorge-legan\u00e9s",
+              "name": "Jorge Legan\u00e9s",
+              "role": "Postdoc",
+              "photo": "https://images.squarespace-cdn.com/content/v1/67b0a449273eb817e2f28b90/cedfba25-c5f1-4e56-9e43-a1eacfc51da1/Jorge_Leganes_Opt.jpg"
+            },
+            {
+              "id": "patrick-opdensteinen",
+              "name": "Patrick Opdensteinen",
+              "role": "Postdoc",
+              "photo": "https://images.squarespace-cdn.com/content/v1/67b0a449273eb817e2f28b90/a8517e44-17aa-4d43-9b14-d4534e5b60d7/Patrick_Opdensteinen_Opt.jpg"
+            },
+            {
+              "id": "dajeong-kim",
+              "name": "Dajeong Kim",
+              "role": "Postdoc",
+              "photo": "https://images.squarespace-cdn.com/content/v1/67b0a449273eb817e2f28b90/e61050fe-d0c4-487a-9983-a80fc7737daf/Dajeong_Kim_Opt.jpg"
+            },
+            {
+              "id": "ayumi-pottenger",
+              "name": "Ayumi Pottenger",
+              "role": "Postdoc",
+              "photo": "https://images.squarespace-cdn.com/content/v1/67b0a449273eb817e2f28b90/6df0a7df-7da8-41b8-81bf-2b445f4fc8f0/Ayumi-Pottenger_Opt_BG-ToneEdit.jpg"
+            },
+            {
+              "id": "adriana-e-gonz\u00e1lez-cisneros",
+              "name": "Adriana E. Gonz\u00e1lez Cisneros",
+              "role": "Postdoc",
+              "photo": "https://images.squarespace-cdn.com/content/v1/67b0a449273eb817e2f28b90/48536345-81b6-4f07-b91c-cf2667dcc4e4/Adriana-Cisneros.jpg"
+            },
+            {
+              "id": "tariq-hussain",
+              "name": "Tariq Hussain",
+              "role": "Postdoc",
+              "photo": "https://images.squarespace-cdn.com/content/v1/67b0a449273eb817e2f28b90/f5a338e5-f055-417a-bac5-07257292cc08/DSC_2793.JPG"
+            }
+          ]
+        },
+        {
+          "id": "bioinformatics-and-systems-biology-graduate-program",
+          "name": "Bioinformatics and Systems Biology Graduate Program",
+          "website": "https://bioinformatics.ucsd.edu/node/233",
+          "overview": "An interdisciplinary graduate program training researchers in bioinformatics, systems biology, and biomedical informatics, focusing on computational approaches to solving biomedical problems.",
+          "members": [
+            {
+              "id": "shankar-subramaniam",
+              "name": "Shankar Subramaniam",
+              "role": "PI"
+            },
+            {
+              "id": "cemil-can-ali-marandi",
+              "name": "Cemil Can Ali Marandi",
+              "role": "PhD"
+            },
+            {
+              "id": "ethan-armand",
+              "name": "Ethan Armand",
               "role": "PhD",
-              "email": "psharma@ucsd.edu",
-              "photo": null,
-              "linkedin": "https://linkedin.com/in/priyasharma",
-              "scholar": null
+              "email": "earmand@ucsd.edu"
+            },
+            {
+              "id": "jeff-jaureguy",
+              "name": "Jeff Jaureguy",
+              "role": "PhD",
+              "email": "jjauregu@ucsd.edu"
+            },
+            {
+              "id": "wilfredo-gabriel-gonzalez-rivera",
+              "name": "Wilfredo Gabriel Gonzalez Rivera",
+              "role": "PhD",
+              "email": "wgonzalezrivera@ucsd.edu"
             }
           ]
         }

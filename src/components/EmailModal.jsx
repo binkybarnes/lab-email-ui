@@ -16,8 +16,11 @@ const INPUT_STYLE = {
 }
 
 async function dispatchEmail({ member, draft, accessToken, senderEmail }) {
+  const to = member.email || draft.toOverride
+  if (!to) return { ok: false, error: 'No email address provided' }
+
   const result = await sendEmail({
-    to: member.email,
+    to,
     subject: draft.subject,
     body: draft.body,
     accessToken,
@@ -25,7 +28,7 @@ async function dispatchEmail({ member, draft, accessToken, senderEmail }) {
 
   const { error: logError } = await supabase.from('email_logs').insert({
     sender_email: senderEmail,
-    recipient_email: member.email,
+    recipient_email: to,
     recipient_name: member.name,
     subject: draft.subject,
     body: draft.body,
@@ -169,12 +172,24 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
           {/* To */}
           <div>
             <label className="text-xs text-muted block mb-1">To</label>
-            <div
-              className="px-3 py-1.5 text-xs text-secondary"
-              style={{ background: '#22262e', border: '1px solid #363b47', borderRadius: '3px' }}
-            >
-              {member.email}
-            </div>
+            {member.email ? (
+              <div
+                className="px-3 py-1.5 text-xs text-secondary"
+                style={{ background: '#22262e', border: '1px solid #363b47', borderRadius: '3px' }}
+              >
+                {member.email}
+              </div>
+            ) : (
+              <input
+                type="email"
+                value={draft.toOverride ?? ''}
+                onChange={e => onUpdateDraft(member.id, 'toOverride', e.target.value)}
+                placeholder={`Enter email for ${member.name}...`}
+                style={{ ...INPUT_STYLE, borderColor: '#f87171' }}
+                onFocus={e => e.target.style.borderColor = '#4d6dff'}
+                onBlur={e => { if (!draft.toOverride) e.target.style.borderColor = '#f87171' }}
+              />
+            )}
           </div>
 
           {/* Subject */}

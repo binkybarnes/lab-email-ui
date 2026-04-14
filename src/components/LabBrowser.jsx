@@ -1,6 +1,6 @@
 import LabSection from './LabSection'
 
-const ROLES = ['PI', 'Postdoc', 'PhD', 'MS', 'Undergrad']
+const ROLES = ['PI', 'Postdoc', 'PhD', 'Masters', 'Staff', 'Undergrad']
 
 const ROLE_CHIP_ACTIVE = {
   background: 'rgba(77,109,255,0.2)',

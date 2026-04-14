@@ -7,7 +7,7 @@ const allLabsStatic = data.departments.flatMap(d =>
 )
 
 function buildInitialDrafts(members) {
-  return Object.fromEntries(members.map(m => [m.id, { subject: '', body: '' }]))
+  return Object.fromEntries(members.map(m => [m.id, { subject: '', body: '', toOverride: '' }]))
 }
 
 export function useAppState() {

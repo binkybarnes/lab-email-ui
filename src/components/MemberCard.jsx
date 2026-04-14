@@ -2,7 +2,8 @@ const ROLE_CONFIG = {
   PI: { bg: 'rgba(217,119,6,0.15)', text: '#fbbf24', accent: '#d97706' },
   Postdoc: { bg: 'rgba(217,119,6,0.10)', text: '#f59e0b', accent: '#b45309' },
   PhD: { bg: 'rgba(59,130,246,0.15)', text: '#93c5fd', accent: '#3b82f6' },
-  MS: { bg: 'rgba(59,130,246,0.10)', text: '#7eb8fb', accent: '#2563eb' },
+  Masters: { bg: 'rgba(59,130,246,0.10)', text: '#7eb8fb', accent: '#2563eb' },
+  Staff: { bg: 'rgba(134,239,172,0.12)', text: '#86efac', accent: '#22c55e' },
   Undergrad: { bg: 'rgba(100,116,139,0.12)', text: '#8892a4', accent: '#52586a' },
 }
 
@@ -11,21 +12,6 @@ function getInitials(name) {
   const parts = cleaned.trim().split(/\s+/)
   if (parts.length === 1) return parts[0][0].toUpperCase()
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-}
-
-function IconLink({ href, label, children }) {
-  if (!href) return <div className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={label}
-      className="text-muted hover:text-[#7b9fff] transition-all duration-200 w-4 h-4 flex items-center justify-center hover:scale-110 flex-shrink-0"
-    >
-      {children}
-    </a>
-  )
 }
 
 export default function MemberCard({ member, selected, onToggle, onEmail, anySelected, isLast }) {
@@ -73,24 +59,12 @@ export default function MemberCard({ member, selected, onToggle, onEmail, anySel
       </div>
 
       {/* Email address */}
-      <div className="text-xs text-muted truncate flex-1 min-w-0">
-        {member.email}
+      <div className="text-xs truncate flex-1 min-w-0" style={{ color: member.email ? '#8892a4' : '#f87171' }}>
+        {member.email || 'No email — you\'ll need to enter it'}
       </div>
 
-      {/* Links + action */}
-      <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
-        <div className="flex items-center gap-2 transition-opacity duration-150" onClick={e => e.stopPropagation()}>
-          <IconLink href={member.linkedin} label="LinkedIn profile">
-            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-            </svg>
-          </IconLink>
-          <IconLink href={member.scholar} label="Google Scholar">
-            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 24a7 7 0 110-14 7 7 0 010 14zm0-24L0 9.5l4.838 3.94A8 8 0 0112 11a8 8 0 017.162 2.44L24 9.5z" />
-            </svg>
-          </IconLink>
-        </div>
+      {/* Action */}
+      <div className="flex items-center flex-shrink-0 ml-auto">
         <button
           onClick={(e) => { e.stopPropagation(); onToggle(member.id); }}
           className="text-xs w-20 py-1 transition-all duration-300 flex items-center justify-center font-medium relative overflow-hidden"
