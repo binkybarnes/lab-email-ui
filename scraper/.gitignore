@@ -1,0 +1,9 @@
+.env
+data/faculty.json
+data/faculty_with_urls.json
+data/crawled_pages/
+data/labs_raw.json
+output/labs.json
+__pycache__/
+.pytest_cache/
+*.pyc
