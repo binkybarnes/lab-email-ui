@@ -57,8 +57,11 @@ function getPlainText(el) {
 }
 
 async function dispatchEmail({ member, draft, accessToken, senderEmail }) {
+  const to = member.email || draft.toOverride
+  if (!to) return { ok: false, error: 'No email address provided' }
+
   const result = await sendEmail({
-    to: member.email,
+    to,
     subject: draft.subject,
     body: draft.body,
     accessToken,
@@ -66,7 +69,7 @@ async function dispatchEmail({ member, draft, accessToken, senderEmail }) {
 
   const { error: logError } = await supabase.from('email_logs').insert({
     sender_email: senderEmail,
-    recipient_email: member.email,
+    recipient_email: to,
     recipient_name: member.name,
     subject: draft.subject,
     body: draft.body,
@@ -230,7 +233,7 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
                   color: currentResult.ok ? '#4ade80' : '#f87171',
                 }}
               >
-                {currentResult.ok ? 'sent' : 'failed'}
+                {currentResult.ok ? 'sent ✓' : 'failed'}
               </span>
             )}
           </div>
@@ -247,15 +250,38 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
 
         {/* Form */}
         <div className="flex flex-col gap-3 px-5 py-4 overflow-y-auto flex-1">
+          {/* Error banner */}
+          {currentResult && !currentResult.ok && (
+            <div
+              className="text-xs px-3 py-2"
+              style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '3px', color: '#f87171' }}
+            >
+              {/401|unauthorized|invalid.?cred/i.test(currentResult.error)
+                ? 'Session expired — sign out and sign back in to refresh your Gmail access.'
+                : currentResult.error}
+            </div>
+          )}
           {/* To */}
           <div>
             <label className="text-xs text-muted block mb-1">To</label>
-            <div
-              className="px-3 py-1.5 text-xs text-secondary"
-              style={{ background: '#22262e', border: '1px solid #363b47', borderRadius: '3px' }}
-            >
-              {member.email}
-            </div>
+            {member.email ? (
+              <div
+                className="px-3 py-1.5 text-xs text-secondary"
+                style={{ background: '#22262e', border: '1px solid #363b47', borderRadius: '3px' }}
+              >
+                {member.email}
+              </div>
+            ) : (
+              <input
+                type="email"
+                value={draft.toOverride ?? ''}
+                onChange={e => onUpdateDraft(member.id, 'toOverride', e.target.value)}
+                placeholder={`Enter email for ${member.name}...`}
+                style={{ ...INPUT_STYLE, borderColor: '#f87171' }}
+                onFocus={e => e.target.style.borderColor = '#4d6dff'}
+                onBlur={e => { if (!draft.toOverride) e.target.style.borderColor = '#f87171' }}
+              />
+            )}
           </div>
 
           {/* Subject */}

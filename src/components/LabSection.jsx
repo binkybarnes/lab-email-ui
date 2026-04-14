@@ -60,12 +60,12 @@ export default function LabSection({ lab, roleFilter, selectedMemberIds, onToggl
             {lab.name}
             <span className="text-sm text-secondary ml-2 font-sans font-normal">{members.length}</span>
           </h2>
-          {lab.url && (
+          {lab.website && (
             <a
-              href={lab.url}
+              href={lab.website}
               target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted hover:text-blue-400 transition-colors p-1"
+              rel="noopener noreferrer" 
+              className="text-muted hover:text-blue-400 transition-colors p-1" 
               onClick={e => e.stopPropagation()}
               title={`Visit ${lab.name} Website`}
             >

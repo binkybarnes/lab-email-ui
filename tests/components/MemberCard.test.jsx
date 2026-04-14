@@ -24,10 +24,10 @@ describe('MemberCard', () => {
     expect(screen.getByText('SC')).toBeInTheDocument()
   })
 
-  it('calls onToggle with member id when checkbox clicked', () => {
+  it('calls onToggle with member id when card is clicked', () => {
     const onToggle = vi.fn()
     render(<MemberCard member={member} selected={false} onToggle={onToggle} onEmail={() => {}} anySelected={false} />)
-    fireEvent.click(screen.getByRole('checkbox'))
+    fireEvent.click(screen.getByText('Dr. Sarah Chen'))
     expect(onToggle).toHaveBeenCalledWith('sarah-chen')
   })
 

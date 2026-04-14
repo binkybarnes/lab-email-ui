@@ -4,7 +4,8 @@ const ROLE_ACCENT = {
   PI: '#d97706',
   Postdoc: '#b45309',
   PhD: '#3b82f6',
-  MS: '#2563eb',
+  Masters: '#2563eb',
+  Staff: '#22c55e',
   Undergrad: '#52586a',
 }
 
