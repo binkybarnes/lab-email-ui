@@ -10,7 +10,7 @@ export function useAuth() {
       .then(({ data: { session } }) => {
         setSession(session)
       })
-      .catch(() => {})
+      .catch((err) => console.error('Supabase getSession failed:', err))
       .finally(() => {
         setLoading(false)
       })
