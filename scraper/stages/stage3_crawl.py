@@ -7,7 +7,9 @@ from models import FacultyWithURL
 ALLOWED_URL_KEYWORDS = ["people", "team", "members", "lab", "about", "research"]
 BLOCKED_URL_KEYWORDS = ["blog", "news", "publication", "paper", "seminar", "event", "course", "class", "cv"]
 PEOPLE_ROLE_KEYWORDS = ["phd", "postdoc", "graduate student", "researcher", "professor", "faculty", "undergraduate"]
-MAX_PAGES_PER_DOMAIN = 3
+PRIORITY_KEYWORDS = ["member", "people", "team", "group", "lab", "about", "who"]
+MAX_DEPTH = 2
+MAX_PAGES_PER_DOMAIN = 20
 PAGE_TIMEOUT = 15000  # ms
 
 
@@ -31,8 +33,9 @@ def has_people_content(markdown: str) -> bool:
 
 
 async def crawl_lab(crawler, faculty: FacultyWithURL) -> tuple[str, str]:
-    """Returns (slug, combined_markdown). Crawls homepage + up to 2 relevant subpages."""
+    """Returns (slug, combined_markdown). BFS crawl up to MAX_DEPTH levels deep."""
     from crawl4ai import CrawlerRunConfig, CacheMode
+    from urllib.parse import urlparse
 
     slug = make_slug(faculty["name"])
     url = faculty["lab_url"]
@@ -43,24 +46,51 @@ async def crawl_lab(crawler, faculty: FacultyWithURL) -> tuple[str, str]:
         page_timeout=PAGE_TIMEOUT,
     )
 
-    # Crawl homepage
-    result = await crawler.arun(url, config=config)
-    if not result.success:
-        return slug, ""
-    combined_md.append(result.markdown or "")
+    homepage_path = urlparse(url).path.rstrip("/")
+    seen_paths = {homepage_path, homepage_path + "/"}
+    if homepage_path.endswith("/index.html") or homepage_path.endswith("/index.htm"):
+        seen_paths.add(homepage_path.rsplit("/index", 1)[0])
 
-    # Follow all internal links at depth 1 (skip only blocked patterns), up to max
-    links = [
-        lnk["href"]
-        for lnk in (result.links.get("internal", []) or [])
-        if lnk.get("href")
-        and not any(kw in lnk["href"].lower().split("?")[0] for kw in BLOCKED_URL_KEYWORDS)
-    ][: MAX_PAGES_PER_DOMAIN - 1]
+    def extract_links(result):
+        """Extract candidate links from a crawl result, deduplicated and filtered."""
+        candidates = []
+        for lnk in (result.links.get("internal", []) or []):
+            href = lnk.get("href", "")
+            if not href:
+                continue
+            path = urlparse(href).path.rstrip("/").split("?")[0]
+            if any(kw in href.lower().split("?")[0] for kw in BLOCKED_URL_KEYWORDS):
+                continue
+            if path in seen_paths or path + "/" in seen_paths:
+                continue
+            if path.endswith("/index.html") or path.endswith("/index.htm"):
+                base = path.rsplit("/index", 1)[0]
+                if base in seen_paths or base == homepage_path:
+                    continue
+            seen_paths.add(path)
+            priority = 0 if any(kw in href.lower() for kw in PRIORITY_KEYWORDS) else 1
+            candidates.append((priority, href))
+        candidates.sort(key=lambda x: x[0])
+        return [href for _, href in candidates]
 
-    for link in links:
-        sub = await crawler.arun(link, config=config)
-        if sub.success and sub.markdown:
-            combined_md.append(sub.markdown)
+    # BFS: queue holds (url, depth) pairs
+    queue = [(url, 0)]
+    pages_crawled = 0
+
+    while queue and pages_crawled < MAX_PAGES_PER_DOMAIN:
+        current_url, depth = queue.pop(0)
+        result = await crawler.arun(current_url, config=config)
+        if not result.success:
+            continue
+        if result.markdown:
+            combined_md.append(result.markdown)
+        pages_crawled += 1
+
+        if depth < MAX_DEPTH:
+            child_links = extract_links(result)
+            for link in child_links:
+                if pages_crawled + len(queue) < MAX_PAGES_PER_DOMAIN:
+                    queue.append((link, depth + 1))
 
     return slug, "\n\n".join(combined_md)
 

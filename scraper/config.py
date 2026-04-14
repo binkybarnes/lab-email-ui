@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent / ".env")
 
-UCSD_SSO_TOKEN = os.environ["UCSD_SSO_TOKEN"]
 EXA_API_KEY = os.environ["EXA_API_KEY"]
 OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
 

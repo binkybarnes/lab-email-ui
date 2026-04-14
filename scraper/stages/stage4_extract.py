@@ -29,31 +29,78 @@ Rules:
 - If the page has no lab or people content, return {{}}
 """
 
-MODEL = "anthropic/claude-haiku-3-5"
+MODEL = "anthropic/claude-3.5-haiku"
+
+
+MEMBER_KEYWORDS = ["member", "people", "team", "group", "phd", "postdoc", "graduate",
+                    "researcher", "professor", "staff", "alumni", "undergraduate"]
 
 
 def build_prompt(markdown: str) -> str:
-    words = markdown.split()
-    truncated = " ".join(words[:6000])
+    """Build prompt by prioritizing sections with member content.
+
+    The crawled markdown is multiple pages concatenated. We split on the repeated
+    nav/header boundaries (each page starts with its own nav) and reorder so pages
+    with member-related keywords come first, then the homepage for overview info.
+    """
+    # Split into pages — crawl4ai concatenates them with double newlines.
+    # Each page typically re-includes the full nav, so look for that pattern.
+    pages = markdown.split("\n\n\n")
+    if len(pages) <= 1:
+        pages = [markdown]
+
+    # Score pages: higher = more member keywords
+    def member_score(page: str) -> int:
+        lower = page.lower()
+        return sum(lower.count(kw) for kw in MEMBER_KEYWORDS)
+
+    # Sort: member-rich pages first, then others (homepage for overview)
+    scored = sorted(enumerate(pages), key=lambda x: member_score(x[1]), reverse=True)
+
+    # Reassemble with member-heavy pages first, cap at 16000 words
+    reordered = "\n\n".join(page for _, page in scored)
+    words = reordered.split()
+    truncated = " ".join(words[:16000])
     return f"Extract lab data from this page content:\n\n{truncated}"
 
 
-def parse_llm_response(raw: str) -> dict | None:
+def parse_llm_response(raw: str, slug: str = "") -> dict | None:
     try:
         text = raw.strip()
-        if text.startswith("```"):
-            text = text.split("```")[1]
-            if text.startswith("json"):
-                text = text[4:]
-        data = json.loads(text.strip())
+        # Strip markdown code fences
+        if "```" in text:
+            parts = text.split("```")
+            # Take the first fenced block
+            for part in parts[1:]:
+                candidate = part.strip()
+                if candidate.startswith("json"):
+                    candidate = candidate[4:].strip()
+                if candidate.startswith("{"):
+                    text = candidate
+                    break
+        # If there's prose before the JSON, find the first { and last }
+        if not text.startswith("{"):
+            start = text.find("{")
+            if start == -1:
+                print(f"  DEBUG [{slug}]: No JSON object found in response")
+                return None
+            end = text.rfind("}")
+            if end == -1:
+                print(f"  DEBUG [{slug}]: No closing brace found")
+                return None
+            text = text[start : end + 1]
+        data = json.loads(text)
         if not data:
+            print(f"  DEBUG [{slug}]: LLM returned empty object/list")
             return None
         for member in data.get("members", []):
             for key in list(member.keys()):
                 if member[key] is None:
                     del member[key]
         return data
-    except Exception:
+    except Exception as e:
+        print(f"  DEBUG [{slug}]: JSON parse failed: {e}")
+        print(f"  DEBUG [{slug}]: Raw response (first 500 chars): {raw[:500]}")
         return None
 
 
@@ -66,9 +113,13 @@ async def extract_lab(client, slug: str, markdown: str) -> RawLab | None:
                 {"role": "user", "content": build_prompt(markdown)},
             ],
             temperature=0,
+            max_tokens=8192,
         )
         raw = response.choices[0].message.content
-        data = parse_llm_response(raw)
+        if not raw:
+            print(f"  DEBUG [{slug}]: LLM returned null/empty content")
+            return None
+        data = parse_llm_response(raw, slug)
         if not data:
             return None
         return {
@@ -113,6 +164,7 @@ async def run() -> None:
             results.append(lab)
         else:
             empty_count += 1
+            print(f"  ⚠️  Empty extraction: {slug}")
         if i % 20 == 0:
             print(f"  {i}/{len(md_files)} extracted...")
 
@@ -128,7 +180,7 @@ async def run() -> None:
             print(f"  Overview: {lab['overview'][:120]}")
 
     estimated_cost = len(md_files) * 3000 * 0.25 / 1_000_000
-    print(f"\nEstimated token cost: ~${estimated_cost:.2f}")
+    print(f"\nEstimated token cost: ~${estimated_cost:.4f}")
 
     if not confirm(f"Save {len(results)} extracted labs to data/labs_raw.json?"):
         print("Aborted.")
