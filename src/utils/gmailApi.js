@@ -33,6 +33,8 @@ export function toBase64Url(str) {
  * @returns {Promise<{ ok: boolean, error?: string }>}
  */
 export async function sendEmail({ to, subject, body, accessToken }) {
+  if (!accessToken) return { ok: false, error: 'No access token — sign out and sign back in' }
+
   const raw = toBase64Url(buildMimeMessage({ to, subject, body }))
 
   try {
