@@ -6,8 +6,27 @@ const allLabsStatic = data.departments.flatMap(d =>
   d.labs.map(l => ({ ...l, departmentId: d.id, departmentName: d.name }))
 )
 
+const EMAIL_TEMPLATE = `Hello Dr. [Name],
+
+I'm writing to express my interest in your research on [research topic] and inquire about paid or volunteer student lab assistant positions in your lab.
+
+I learned about your research on [topic] when I was searching online for UC San Diego researchers who specifically study [topic that you're interested in]. I'm very interested in [this research topic] because [explain why you're passionate about it]. [Can say more relevant stuff about yourself here]
+
+My strengths applicable to working in a research laboratory include [hand-eye coordination? Programming? Problem-solving? Working independently? What do you have to offer them?]. I am preferably looking for a paid position [fall/winter/spring/summer] quarter, but I would also be willing to take on a volunteer position [washing glassware etc.] to support your research since I am eager to start gaining experience in [specific research field].
+
+Please find my resume attached, and thank you for your time.`
+
+function getLastName(name) {
+  const cleaned = name.replace(/^(Dr\.|Prof\.|Mr\.|Ms\.|Mrs\.)\s*/i, '').trim()
+  const parts = cleaned.split(/\s+/)
+  return parts[parts.length - 1]
+}
+
 function buildInitialDrafts(members) {
-  return Object.fromEntries(members.map(m => [m.id, { subject: '', body: '' }]))
+  return Object.fromEntries(members.map(m => [m.id, {
+    subject: 'Inquiry About Research Opportunities',
+    body: EMAIL_TEMPLATE.replace('[Name]', getLastName(m.name)),
+  }]))
 }
 
 export function useAppState() {

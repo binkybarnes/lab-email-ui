@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { sendEmail } from '../utils/gmailApi'
 import { supabase } from '../lib/supabase'
 
@@ -13,6 +13,47 @@ const INPUT_STYLE = {
   fontSize: 13,
   width: '100%',
   padding: '7px 10px',
+}
+
+const PLACEHOLDER_REGEX = /\[([^\]]+)\]/g
+
+function renderHighlightedBody(text) {
+  const parts = []
+  let lastIndex = 0
+  let match
+  const regex = new RegExp(PLACEHOLDER_REGEX.source, 'g')
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index))
+    }
+    parts.push(`<span class="template-placeholder" data-placeholder="true" style="background:rgba(234,179,8,0.18);color:#facc15;border-radius:2px;padding:0 2px;cursor:pointer;border-bottom:1px dashed rgba(234,179,8,0.5);transition:background 0.15s">${match[0]}</span>`)
+    lastIndex = regex.lastIndex
+  }
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex))
+  }
+  return parts.join('')
+}
+
+function getPlainText(el) {
+  // Walk the DOM to extract text, converting <br> and block boundaries to newlines
+  let text = ''
+  for (const node of el.childNodes) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      text += node.textContent
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      if (node.tagName === 'BR') {
+        text += '\n'
+      } else if (node.tagName === 'DIV' || node.tagName === 'P') {
+        if (text.length > 0 && !text.endsWith('\n')) text += '\n'
+        text += getPlainText(node)
+        if (!text.endsWith('\n')) text += '\n'
+      } else {
+        text += getPlainText(node)
+      }
+    }
+  }
+  return text
 }
 
 async function dispatchEmail({ member, draft, accessToken, senderEmail }) {
@@ -41,6 +82,8 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
   const { open, members, currentIndex, drafts } = modal
   const [sending, setSending] = useState(false)
   const [results, setResults] = useState({}) // memberId -> { ok, error }
+  const bodyRef = useRef(null)
+  const isInternalUpdate = useRef(false)
 
   useEffect(() => {
     if (!open) return
@@ -57,10 +100,59 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
     return () => document.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
+  // Sync the contentEditable HTML when the draft body changes externally (e.g. navigation)
+  const member = open && members.length > 0 ? members[currentIndex] : null
+  const draft = member ? (drafts[member.id] ?? { subject: '', body: '' }) : { subject: '', body: '' }
+
+  useEffect(() => {
+    if (!bodyRef.current || !open || isInternalUpdate.current) {
+      isInternalUpdate.current = false
+      return
+    }
+    const html = renderHighlightedBody(draft.body).replace(/\n/g, '<br>')
+    bodyRef.current.innerHTML = html
+  }, [member?.id, open]) // only re-render HTML on member change or modal open
+
+  // Handle clicking on a placeholder to select it
+  const handleBodyClick = useCallback((e) => {
+    const placeholder = e.target.closest('[data-placeholder]')
+    if (placeholder) {
+      const range = document.createRange()
+      range.selectNodeContents(placeholder)
+      const sel = window.getSelection()
+      sel.removeAllRanges()
+      sel.addRange(range)
+    }
+  }, [])
+
+  // Handle edits in the contentEditable div
+  const handleBodyInput = useCallback(() => {
+    if (!bodyRef.current || !member) return
+    const plainText = getPlainText(bodyRef.current).replace(/\n$/, '')
+    isInternalUpdate.current = true
+    onUpdateDraft(member.id, 'body', plainText)
+
+    // Re-render with highlights, preserving caret position
+    const sel = window.getSelection()
+    if (!sel.rangeCount) return
+
+    // Save caret as a character offset
+    const range = sel.getRangeAt(0)
+    const preRange = document.createRange()
+    preRange.selectNodeContents(bodyRef.current)
+    preRange.setEnd(range.startContainer, range.startOffset)
+    const caretOffset = preRange.toString().length
+
+    // Re-render
+    const html = renderHighlightedBody(plainText).replace(/\n/g, '<br>')
+    bodyRef.current.innerHTML = html
+
+    // Restore caret
+    restoreCaretPosition(bodyRef.current, caretOffset)
+  }, [member, onUpdateDraft])
+
   if (!open || members.length === 0) return null
 
-  const member = members[currentIndex]
-  const draft = drafts[member.id] ?? { subject: '', body: '' }
   const isMulti = members.length > 1
   const currentResult = results[member.id]
 
@@ -180,17 +272,33 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
             />
           </div>
 
-          {/* Body */}
+          {/* Body – contentEditable with highlighted placeholders */}
           <div className="flex flex-col flex-1">
-            <label className="text-xs text-muted block mb-1">Body</label>
-            <textarea
-              value={draft.body}
-              onChange={e => onUpdateDraft(member.id, 'body', e.target.value)}
-              placeholder="Write your email..."
-              rows={10}
-              style={{ ...INPUT_STYLE, resize: 'none', fontSize: 12 }}
-              onFocus={e => e.target.style.borderColor = '#4d6dff'}
-              onBlur={e => e.target.style.borderColor = '#363b47'}
+            <label className="text-xs text-muted block mb-1">
+              Body
+              <span className="ml-2 text-[10px]" style={{ color: '#eab308', opacity: 0.7 }}>
+                click highlighted fields to edit
+              </span>
+            </label>
+            <div
+              ref={bodyRef}
+              contentEditable
+              suppressContentEditableWarning
+              onClick={handleBodyClick}
+              onInput={handleBodyInput}
+              className="flex-1"
+              style={{
+                ...INPUT_STYLE,
+                fontSize: 12,
+                minHeight: 220,
+                maxHeight: 400,
+                overflowY: 'auto',
+                whiteSpace: 'pre-wrap',
+                wordWrap: 'break-word',
+                lineHeight: 1.6,
+              }}
+              onFocus={e => e.currentTarget.style.borderColor = '#4d6dff'}
+              onBlur={e => e.currentTarget.style.borderColor = '#363b47'}
             />
           </div>
         </div>
@@ -247,3 +355,43 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
     </div>
   )
 }
+
+/** Restore caret to a given character offset inside a contentEditable element */
+function restoreCaretPosition(el, targetOffset) {
+  const sel = window.getSelection()
+  const range = document.createRange()
+  let currentOffset = 0
+  let found = false
+
+  function walk(node) {
+    if (found) return
+    if (node.nodeType === Node.TEXT_NODE) {
+      const len = node.textContent.length
+      if (currentOffset + len >= targetOffset) {
+        range.setStart(node, targetOffset - currentOffset)
+        range.collapse(true)
+        found = true
+        return
+      }
+      currentOffset += len
+    } else {
+      for (const child of node.childNodes) {
+        walk(child)
+        if (found) return
+      }
+    }
+  }
+
+  walk(el)
+  if (found) {
+    sel.removeAllRanges()
+    sel.addRange(range)
+  } else {
+    // If offset exceeds content, place at end
+    range.selectNodeContents(el)
+    range.collapse(false)
+    sel.removeAllRanges()
+    sel.addRange(range)
+  }
+}
+
