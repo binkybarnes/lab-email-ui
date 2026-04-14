@@ -48,20 +48,6 @@ export default function MemberCard({ member, selected, onToggle, onEmail, anySel
         if (!selected) e.currentTarget.style.background = 'transparent'
       }}
     >
-      {/* Checkbox */}
-      <div
-        className="transition-opacity duration-150 flex-shrink-0 opacity-100"
-      >
-        <input
-          type="checkbox"
-          checked={selected}
-          onChange={(e) => { e.stopPropagation(); onToggle(member.id); }}
-          className="w-3.5 h-3.5 cursor-pointer"
-          style={{ borderRadius: '2px' }}
-          aria-label={`Select ${member.name}`}
-        />
-      </div>
-
       {/* Avatar */}
       <div
         className="w-7 h-7 rounded flex items-center justify-center text-xs font-medium flex-shrink-0"

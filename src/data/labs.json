@@ -7,6 +7,7 @@
         {
           "id": "ai-lab",
           "name": "Artificial Intelligence Lab",
+          "url": "https://cse.ucsd.edu/research/ai-lab",
           "members": [
             {
               "id": "sarah-chen",
@@ -19,7 +20,7 @@
             },
             {
               "id": "michael-rodriguez",
-              "name": "Michael Rodriguez",
+              "name": "Michael Rodriguez", 
               "role": "PhD",
               "email": "mrodriguez@ucsd.edu",
               "photo": null,
@@ -49,6 +50,7 @@
         {
           "id": "csl",
           "name": "Computer Systems Lab",
+          "url": "https://cse.ucsd.edu/research/csl",
           "members": [
             {
               "id": "david-park",
@@ -73,6 +75,7 @@
         {
           "id": "hci-lab",
           "name": "Human-Computer Interaction Lab",
+          "url": "https://cse.ucsd.edu/research/hci-lab",
           "members": [
             {
               "id": "lisa-park",
@@ -112,6 +115,7 @@
         {
           "id": "wireless-lab",
           "name": "Wireless Systems Lab",
+          "url": "https://ece.ucsd.edu/research/wireless-lab",
           "members": [
             {
               "id": "chen-wei",

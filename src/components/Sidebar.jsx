@@ -14,7 +14,7 @@ function DeptSection({ dept, visibleLabIds, onToggleLab, onToggleVisibleLabs }) 
     onToggleVisibleLabs(labIds)
   }
 
-  return (
+  return (  
     <div className="mb-0.5">
       <div 
         className="flex items-center gap-2 w-full text-left px-3 py-1 transition-colors cursor-pointer group"

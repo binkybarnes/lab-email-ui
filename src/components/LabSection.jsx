@@ -37,7 +37,8 @@ export default function LabSection({ lab, roleFilter, selectedMemberIds, onToggl
             borderColor: allSelected ? '#4d6dff' : someSelected ? '#637ae6' : '#52586a',
             backgroundColor: allSelected ? '#4d6dff' : someSelected ? 'rgba(77,109,255,0.2)' : 'transparent',
             display: 'grid',
-            placeItems: 'center'
+            placeItems: 'center',
+            backgroundImage: 'none'
           }}
         />
         {/* Custom checkmark/minus overlay */}
@@ -54,10 +55,26 @@ export default function LabSection({ lab, roleFilter, selectedMemberIds, onToggl
           )}
         </div>
         
-        <h2 className="text-md font-semibold text-primary font-serif flex-1">
-          {lab.name}
-          <span className="text-sm text-secondary ml-2 font-sans font-normal">{members.length}</span>
-        </h2>
+        <div className="flex-1 flex items-center gap-2">
+          <h2 className="text-md font-semibold text-primary font-serif">
+            {lab.name}
+            <span className="text-sm text-secondary ml-2 font-sans font-normal">{members.length}</span>
+          </h2>
+          {lab.url && (
+            <a 
+              href={lab.url} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-muted hover:text-blue-400 transition-colors p-1" 
+              onClick={e => e.stopPropagation()}
+              title={`Visit ${lab.name} Website`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          )}
+        </div>
         
         <button
           className="p-1 hover:bg-[#272b34] text-primary transition-colors rounded flex-shrink-0"

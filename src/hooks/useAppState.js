@@ -2,12 +2,16 @@ import { useState, useCallback, useMemo } from 'react'
 import data from '../data/labs.json'
 import { toggleSetItem, areAllSelected } from '../utils/selection'
 
+const allLabsStatic = data.departments.flatMap(d =>
+  d.labs.map(l => ({ ...l, departmentId: d.id, departmentName: d.name }))
+)
+
 function buildInitialDrafts(members) {
   return Object.fromEntries(members.map(m => [m.id, { subject: '', body: '' }]))
 }
 
 export function useAppState() {
-  const [visibleLabIds, setVisibleLabIds] = useState(new Set())
+  const [visibleLabIds, setVisibleLabIds] = useState(new Set(allLabsStatic.map(l => l.id)))
   const [selectedMemberIds, setSelectedMemberIds] = useState(new Set())
   const [roleFilter, setRoleFilter] = useState('all')
   const [emailModal, setEmailModal] = useState({
@@ -17,17 +21,13 @@ export function useAppState() {
     drafts: {},
   })
 
-  const allLabs = useMemo(() =>
-    data.departments.flatMap(d =>
-      d.labs.map(l => ({ ...l, departmentId: d.id, departmentName: d.name }))
-    ), [])
+  const allLabs = useMemo(() => allLabsStatic, [])
 
   const allMembers = useMemo(() => allLabs.flatMap(l => 
     l.members.map(m => ({ ...m, labName: l.name, labId: l.id }))
   ), [allLabs])
 
   const visibleLabs = useMemo(() => {
-    if (visibleLabIds.size === 0) return allLabs
     return allLabs.filter(l => visibleLabIds.has(l.id))
   }, [allLabs, visibleLabIds])
 
