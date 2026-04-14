@@ -33,7 +33,7 @@ def print_verify_summary(faculty: list[Faculty]) -> None:
         print(f"  {f['name']} — {f['department']}")
 
 
-def run() -> None:
+async def run() -> None:
     from config import FACULTY_FILE, PROFILES_CSV
     from verify import confirm
 
