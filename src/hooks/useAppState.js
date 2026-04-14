@@ -2,12 +2,16 @@ import { useState, useCallback, useMemo } from 'react'
 import data from '../data/labs.json'
 import { toggleSetItem, areAllSelected } from '../utils/selection'
 
+const allLabsStatic = data.departments.flatMap(d =>
+  d.labs.map(l => ({ ...l, departmentId: d.id, departmentName: d.name }))
+)
+
 function buildInitialDrafts(members) {
   return Object.fromEntries(members.map(m => [m.id, { subject: '', body: '' }]))
 }
 
 export function useAppState() {
-  const [visibleLabIds, setVisibleLabIds] = useState(new Set())
+  const [visibleLabIds, setVisibleLabIds] = useState(new Set(allLabsStatic.map(l => l.id)))
   const [selectedMemberIds, setSelectedMemberIds] = useState(new Set())
   const [roleFilter, setRoleFilter] = useState('all')
   const [emailModal, setEmailModal] = useState({
@@ -17,17 +21,13 @@ export function useAppState() {
     drafts: {},
   })
 
-  const allLabs = useMemo(() =>
-    data.departments.flatMap(d =>
-      d.labs.map(l => ({ ...l, departmentId: d.id, departmentName: d.name }))
-    ), [])
+  const allLabs = useMemo(() => allLabsStatic, [])
 
   const allMembers = useMemo(() => allLabs.flatMap(l => 
     l.members.map(m => ({ ...m, labName: l.name, labId: l.id }))
   ), [allLabs])
 
   const visibleLabs = useMemo(() => {
-    if (visibleLabIds.size === 0) return allLabs
     return allLabs.filter(l => visibleLabIds.has(l.id))
   }, [allLabs, visibleLabIds])
 
@@ -43,6 +43,19 @@ export function useAppState() {
 
   const toggleLab = useCallback((labId) => {
     setVisibleLabIds(prev => toggleSetItem(prev, labId))
+  }, [])
+
+  const toggleVisibleLabs = useCallback((labIds) => {
+    setVisibleLabIds(prev => {
+      const allSelected = labIds.length > 0 && labIds.every(id => prev.has(id))
+      const next = new Set(prev)
+      if (allSelected) {
+        labIds.forEach(id => next.delete(id))
+      } else {
+        labIds.forEach(id => next.add(id))
+      }
+      return next
+    })
   }, [])
 
   const toggleMember = useCallback((memberId) => {
@@ -61,6 +74,19 @@ export function useAppState() {
       return next
     })
   }, [visibleMembers])
+
+  const toggleLabMembers = useCallback((memberIds) => {
+    setSelectedMemberIds(prev => {
+      const allSelected = memberIds.every(id => prev.has(id))
+      const next = new Set(prev)
+      if (allSelected) {
+        memberIds.forEach(id => next.delete(id))
+      } else {
+        memberIds.forEach(id => next.add(id))
+      }
+      return next
+    })
+  }, [])
 
   const clearSelection = useCallback(() => setSelectedMemberIds(new Set()), [])
 
@@ -98,7 +124,9 @@ export function useAppState() {
     setRoleFilter,
     emailModal,
     toggleLab,
+    toggleVisibleLabs,
     toggleMember,
+    toggleLabMembers,
     applyRoleSelection,
     clearSelection,
     openEmailModal,

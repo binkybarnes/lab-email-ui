@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
-import { buildGmailUrl } from '../utils/gmail'
+import { useEffect, useState } from 'react'
+import { sendEmail } from '../utils/gmailApi'
+import { supabase } from '../lib/supabase'
 
 const INPUT_STYLE = {
   background: '#22262e',
@@ -14,8 +15,40 @@ const INPUT_STYLE = {
   padding: '7px 10px',
 }
 
-export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate }) {
+async function dispatchEmail({ member, draft, accessToken, senderEmail }) {
+  const result = await sendEmail({
+    to: member.email,
+    subject: draft.subject,
+    body: draft.body,
+    accessToken,
+  })
+
+  const { error: logError } = await supabase.from('email_logs').insert({
+    sender_email: senderEmail,
+    recipient_email: member.email,
+    recipient_name: member.name,
+    subject: draft.subject,
+    body: draft.body,
+    status: result.ok ? 'sent' : 'failed',
+    error: result.ok ? null : result.error,
+  })
+  if (logError) console.error('[email_logs] insert failed:', logError.message)
+
+  return result
+}
+
+export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, accessToken, senderEmail }) {
   const { open, members, currentIndex, drafts } = modal
+  const [sending, setSending] = useState(false)
+  const [results, setResults] = useState({}) // memberId -> { ok, error }
+
+  useEffect(() => {
+    if (!open) return
+    return () => {
+      setResults({})
+      setSending(false)
+    }
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -29,17 +62,28 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate }
   const member = members[currentIndex]
   const draft = drafts[member.id] ?? { subject: '', body: '' }
   const isMulti = members.length > 1
+  const currentResult = results[member.id]
 
-  function openInGmail() {
-    window.open(buildGmailUrl({ to: member.email, subject: draft.subject, body: draft.body }), '_blank')
+  async function handleSend() {
+    setSending(true)
+    const result = await dispatchEmail({ member, draft, accessToken, senderEmail })
+    setResults(prev => ({ ...prev, [member.id]: result }))
+    setSending(false)
   }
 
-  function sendAll() {
-    members.forEach(m => {
+  async function handleSendAll() {
+    setSending(true)
+    for (const m of members) {
+      if (results[m.id]?.ok) continue
       const d = drafts[m.id] ?? { subject: '', body: '' }
-      window.open(buildGmailUrl({ to: m.email, subject: d.subject, body: d.body }), '_blank')
-    })
+      const result = await dispatchEmail({ member: m, draft: d, accessToken, senderEmail })
+      setResults(prev => ({ ...prev, [m.id]: result }))
+    }
+    setSending(false)
   }
+
+  const sentCount = Object.values(results).filter(r => r.ok).length
+  const failedCount = Object.values(results).filter(r => !r.ok).length
 
   return (
     <div
@@ -85,6 +129,18 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate }
               </>
             )}
             <span className="text-xs font-medium text-primary">{member.name}</span>
+            {currentResult && (
+              <span
+                className="text-xs px-1.5 py-0.5"
+                style={{
+                  borderRadius: '3px',
+                  background: currentResult.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+                  color: currentResult.ok ? '#4ade80' : '#f87171',
+                }}
+              >
+                {currentResult.ok ? 'sent' : 'failed'}
+              </span>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -144,34 +200,46 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate }
           className="flex items-center justify-between px-5 py-3"
           style={{ borderTop: '1px solid #363b47' }}
         >
-          <button
-            disabled
-            title="Coming soon"
-            className="text-xs px-3 py-1 text-muted cursor-not-allowed opacity-40"
-            style={{ border: '1px solid #363b47', background: 'transparent', borderRadius: '3px' }}
-          >
-            ✦ AI Writer
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              disabled
+              title="Coming soon"
+              className="text-xs px-3 py-1 text-muted cursor-not-allowed opacity-40"
+              style={{ border: '1px solid #363b47', background: 'transparent', borderRadius: '3px' }}
+            >
+              ✦ AI Writer
+            </button>
+            {isMulti && (sentCount > 0 || failedCount > 0) && (
+              <span className="text-xs text-muted">
+                {sentCount > 0 && <span style={{ color: '#4ade80' }}>{sentCount} sent</span>}
+                {sentCount > 0 && failedCount > 0 && ' · '}
+                {failedCount > 0 && <span style={{ color: '#f87171' }}>{failedCount} failed</span>}
+              </span>
+            )}
+          </div>
+
           <div className="flex items-center gap-2">
             {isMulti && (
               <button
-                onClick={sendAll}
-                className="text-xs px-3 py-1.5 transition-colors text-secondary"
+                onClick={handleSendAll}
+                disabled={sending}
+                className="text-xs px-3 py-1.5 transition-colors text-secondary disabled:opacity-50"
                 style={{ border: '1px solid #363b47', background: 'transparent', borderRadius: '3px' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#272b34'}
+                onMouseEnter={e => !sending && (e.currentTarget.style.background = '#272b34')}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
-                send all ({members.length})
+                {sending ? 'sending...' : `send all (${members.length})`}
               </button>
             )}
             <button
-              onClick={openInGmail}
-              className="text-xs px-4 py-1.5 transition-all duration-150"
+              onClick={handleSend}
+              disabled={sending || currentResult?.ok}
+              className="text-xs px-4 py-1.5 transition-all duration-150 disabled:opacity-50"
               style={{ background: '#4d6dff', color: '#fff', borderRadius: '3px' }}
-              onMouseEnter={e => e.currentTarget.style.background = '#3d5df0'}
+              onMouseEnter={e => !sending && !currentResult?.ok && (e.currentTarget.style.background = '#3d5df0')}
               onMouseLeave={e => e.currentTarget.style.background = '#4d6dff'}
             >
-              open in Gmail →
+              {sending ? 'sending...' : currentResult?.ok ? 'sent ✓' : 'Send'}
             </button>
           </div>
         </div>

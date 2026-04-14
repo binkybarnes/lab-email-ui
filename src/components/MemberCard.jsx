@@ -14,14 +14,14 @@ function getInitials(name) {
 }
 
 function IconLink({ href, label, children }) {
-  if (!href) return null
+  if (!href) return <div className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="text-muted hover:text-secondary transition-colors duration-150"
+      className="text-muted hover:text-[#7b9fff] transition-all duration-200 w-4 h-4 flex items-center justify-center hover:scale-110 flex-shrink-0"
     >
       {children}
     </a>
@@ -48,20 +48,6 @@ export default function MemberCard({ member, selected, onToggle, onEmail, anySel
         if (!selected) e.currentTarget.style.background = 'transparent'
       }}
     >
-      {/* Checkbox */}
-      <div
-        className="transition-opacity duration-150 flex-shrink-0 opacity-100"
-      >
-        <input
-          type="checkbox"
-          checked={selected}
-          onChange={(e) => { e.stopPropagation(); onToggle(member.id); }}
-          className="w-3.5 h-3.5 cursor-pointer"
-          style={{ borderRadius: '2px' }}
-          aria-label={`Select ${member.name}`}
-        />
-      </div>
-
       {/* Avatar */}
       <div
         className="w-7 h-7 rounded flex items-center justify-center text-xs font-medium flex-shrink-0"
@@ -93,7 +79,7 @@ export default function MemberCard({ member, selected, onToggle, onEmail, anySel
 
       {/* Links + action */}
       <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
-        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-2 transition-opacity duration-150" onClick={e => e.stopPropagation()}>
           <IconLink href={member.linkedin} label="LinkedIn profile">
             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
@@ -107,25 +93,31 @@ export default function MemberCard({ member, selected, onToggle, onEmail, anySel
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); onToggle(member.id); }}
-          className="text-xs px-2 py-0.5 transition-all duration-150"
+          className="text-xs w-20 py-1 transition-all duration-300 flex items-center justify-center font-medium relative overflow-hidden"
           style={{
-            border: '1px solid #363b47',
-            background: 'transparent',
-            color: '#8892a4',
-            borderRadius: '3px',
+            border: '1px solid',
+            borderColor: selected ? 'rgba(77,109,255,0.4)' : '#363b47',
+            background: selected ? 'rgba(77,109,255,0.1)' : 'transparent',
+            color: selected ? '#7b9fff' : '#8892a4',
+            borderRadius: '4px',
+            boxShadow: selected ? '0 0 10px rgba(77,109,255,0.1) inset' : 'none',
           }}
           onMouseEnter={e => {
             e.currentTarget.style.borderColor = '#4d6dff'
             e.currentTarget.style.color = '#7b9fff'
-            e.currentTarget.style.background = 'rgba(77,109,255,0.1)'
+            e.currentTarget.style.background = 'rgba(77,109,255,0.15)'
+            e.currentTarget.style.transform = 'translateY(-1px)'
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(77,109,255,0.15)'
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.borderColor = '#363b47'
-            e.currentTarget.style.color = '#8892a4'
-            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.borderColor = selected ? 'rgba(77,109,255,0.4)' : '#363b47'
+            e.currentTarget.style.color = selected ? '#7b9fff' : '#8892a4'
+            e.currentTarget.style.background = selected ? 'rgba(77,109,255,0.1)' : 'transparent'
+            e.currentTarget.style.transform = 'translateY(0)'
+            e.currentTarget.style.boxShadow = selected ? '0 0 10px rgba(77,109,255,0.1) inset' : 'none'
           }}
         >
-          {selected ? 'Added ✓' : 'Add +'}
+          <span className="relative z-10">{selected ? 'Added ✓' : 'Add +'}</span>
         </button>
       </div>
     </div>
