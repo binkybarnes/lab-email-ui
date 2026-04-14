@@ -43,7 +43,8 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
   const [results, setResults] = useState({}) // memberId -> { ok, error }
 
   useEffect(() => {
-    if (!open) {
+    if (!open) return
+    return () => {
       setResults({})
       setSending(false)
     }
