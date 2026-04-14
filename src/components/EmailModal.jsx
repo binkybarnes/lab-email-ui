@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { sendEmail } from '../utils/gmailApi'
 import { supabase } from '../lib/supabase'
 
@@ -44,11 +45,64 @@ function buildDrafts(members) {
   return Object.fromEntries(members.map(m => [m.id, { subject: '', body: '', toOverride: '' }]))
 }
 
-export default function EmailModal({ modal, onClose, onNavigate, accessToken, senderEmail }) {
+function DisclaimerPopup({ onAccept, onCancel }) {
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      onClick={e => { if (e.target === e.currentTarget) onCancel() }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+        className="bg-[#1e2128] border border-[#363b47] rounded-lg shadow-2xl p-6 max-w-lg w-full"
+      >
+        <div className="flex items-center gap-3 mb-4 text-[#eab308]">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <h2 className="text-lg font-semibold text-primary tracking-wide">Usage Disclaimer</h2>
+        </div>
+
+        <div className="space-y-5 text-base text-muted leading-relaxed">
+          <ul className="list-disc pl-5 space-y-4">
+            <li>
+              <strong className="text-primary font-medium">Follow Lab Instructions:</strong> Always check the lab's website or PI's page first. If they have specific rules for applying or aren't taking students, follow those instructions instead.
+            </li>
+            <li>
+              <strong className="text-primary font-medium">Do Not Spam:</strong> Please don't mass-email everyone in a lab. Only contact individuals whose research specifically aligns with yours.
+            </li>
+          </ul>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-xs text-muted hover:text-secondary transition-colors"
+            style={{ border: '1px solid #363b47', borderRadius: '3px', background: 'transparent' }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onAccept}
+            className="px-5 py-2.5 bg-[#4d6dff] hover:bg-[#3d5df0] text-white text-xs uppercase tracking-wider font-medium rounded transition-colors shadow-[0_0_15px_rgba(77,109,255,0.2)] focus:outline-none focus:ring-2 focus:ring-[#4d6dff] focus:ring-offset-2 focus:ring-offset-[#1e2128]"
+          >
+            I Understand and Agree
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+export default function EmailModal({ modal, onClose, onNavigate, session, signIn, getAccessToken }) {
   const { open, members, currentIndex } = modal
   const [drafts, setDrafts] = useState({})
   const [sending, setSending] = useState(false)
   const [results, setResults] = useState({}) // memberId -> { ok, error }
+  const [showDisclaimer, setShowDisclaimer] = useState(false)
+  const [pendingSendAll, setPendingSendAll] = useState(false)
   const prevMembersRef = useRef(null)
 
   // Re-initialize drafts only when the member list changes (new modal open)
@@ -80,20 +134,52 @@ export default function EmailModal({ modal, onClose, onNavigate, accessToken, se
   const isMulti = members.length > 1
   const currentResult = results[member.id]
 
-  async function handleSend() {
+  function requireDisclaimerOrSignIn(sendAll) {
+    // If not signed in, trigger Google sign-in first
+    if (!session) {
+      signIn()
+      return
+    }
+
+    const accepted = localStorage.getItem('disclaimer_accepted')
+    if (accepted) {
+      sendAll ? doSendAll() : doSend()
+    } else {
+      setPendingSendAll(sendAll)
+      setShowDisclaimer(true)
+    }
+  }
+
+  function handleDisclaimerAccept() {
+    localStorage.setItem('disclaimer_accepted', 'true')
+    setShowDisclaimer(false)
+    pendingSendAll ? doSendAll() : doSend()
+  }
+
+  async function doSend() {
     setSending(true)
-    const result = await dispatchEmail({ member, draft, accessToken, senderEmail })
-    setResults(prev => ({ ...prev, [member.id]: result }))
+    try {
+      const token = await getAccessToken()
+      const result = await dispatchEmail({ member, draft, accessToken: token, senderEmail: session.user.email })
+      setResults(prev => ({ ...prev, [member.id]: result }))
+    } catch (e) {
+      setResults(prev => ({ ...prev, [member.id]: { ok: false, error: e.message } }))
+    }
     setSending(false)
   }
 
-  async function handleSendAll() {
+  async function doSendAll() {
     setSending(true)
-    for (const m of members) {
-      if (results[m.id]?.ok) continue
-      const d = drafts[m.id] ?? { subject: '', body: '' }
-      const result = await dispatchEmail({ member: m, draft: d, accessToken, senderEmail })
-      setResults(prev => ({ ...prev, [m.id]: result }))
+    try {
+      const token = await getAccessToken()
+      for (const m of members) {
+        if (results[m.id]?.ok) continue
+        const d = drafts[m.id] ?? { subject: '', body: '' }
+        const result = await dispatchEmail({ member: m, draft: d, accessToken: token, senderEmail: session.user.email })
+        setResults(prev => ({ ...prev, [m.id]: result }))
+      }
+    } catch (e) {
+      setResults(prev => ({ ...prev, [member.id]: { ok: false, error: e.message } }))
     }
     setSending(false)
   }
@@ -260,7 +346,7 @@ export default function EmailModal({ modal, onClose, onNavigate, accessToken, se
           <div className="flex items-center gap-2">
             {isMulti && (
               <button
-                onClick={handleSendAll}
+                onClick={() => requireDisclaimerOrSignIn(true)}
                 disabled={sending}
                 className="text-xs px-3 py-1.5 transition-colors text-secondary disabled:opacity-50"
                 style={{ border: '1px solid #363b47', background: 'transparent', borderRadius: '3px' }}
@@ -271,18 +357,26 @@ export default function EmailModal({ modal, onClose, onNavigate, accessToken, se
               </button>
             )}
             <button
-              onClick={handleSend}
+              onClick={() => requireDisclaimerOrSignIn(false)}
               disabled={sending || currentResult?.ok}
               className="text-xs px-4 py-1.5 transition-all duration-150 disabled:opacity-50"
               style={{ background: '#4d6dff', color: '#fff', borderRadius: '3px' }}
               onMouseEnter={e => !sending && !currentResult?.ok && (e.currentTarget.style.background = '#3d5df0')}
               onMouseLeave={e => e.currentTarget.style.background = '#4d6dff'}
             >
-              {sending ? 'sending...' : currentResult?.ok ? 'sent ✓' : 'Send'}
+              {!session ? 'Sign in to Send' : sending ? 'sending...' : currentResult?.ok ? 'sent ✓' : 'Send'}
             </button>
           </div>
         </div>
       </div>
+      <AnimatePresence>
+        {showDisclaimer && (
+          <DisclaimerPopup
+            onAccept={handleDisclaimerAccept}
+            onCancel={() => setShowDisclaimer(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

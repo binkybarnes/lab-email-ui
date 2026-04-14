@@ -7,11 +7,9 @@ import Sidebar from './components/Sidebar'
 import LabBrowser from './components/LabBrowser'
 import CheckoutSidebar from './components/CheckoutSidebar'
 import EmailModal from './components/EmailModal'
-import LoginScreen from './components/LoginScreen'
-import DisclaimerModal from './components/DisclaimerModal'
 
 export default function App() {
-  const { session, loading, signIn, signOut } = useAuth()
+  const { session, loading, signIn, signOut, getAccessToken } = useAuth()
 
   const {
     data,
@@ -40,15 +38,13 @@ export default function App() {
 
   if (loading) return null
 
-  if (!session) return <LoginScreen onSignIn={signIn} />
-
   return (
     <div className="relative min-h-screen grid-bg">
       <Navbar
         selectedCount={selectedMembers.length}
         rightOffset={rightOffset}
-        user={session.user}
-        onSignOut={signOut}
+        user={session?.user ?? null}
+        onSignOut={session ? signOut : null}
       />
       <Sidebar
         data={data}
@@ -85,10 +81,10 @@ export default function App() {
         modal={emailModal}
         onClose={closeEmailModal}
         onNavigate={navigateModal}
-        accessToken={session.provider_token}
-        senderEmail={session.user.email}
+        session={session}
+        signIn={signIn}
+        getAccessToken={getAccessToken}
       />
-      <DisclaimerModal />
     </div>
   )
 }
