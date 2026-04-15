@@ -374,6 +374,7 @@ async def run() -> None:
             url: {
                 "found_people": False,
                 "queue": [url],
+                "url_anchor": {url: ""},  # url -> anchor text for priority scoring
                 "visited": set(),
                 "markdown_parts": [],
                 "pages_crawled": 0
@@ -389,7 +390,11 @@ async def run() -> None:
                     continue
                 # Stop if we found people, UNLESS there are still Priority 1 (people/directory) links unchecked
                 if state["pages_crawled"] > 0 and state["found_people"]:
-                    has_p1 = any(link_priority(url) == 1 for url in state["queue"] if url not in state["visited"])
+                    has_p1 = any(
+                        link_priority(u, state["url_anchor"].get(u, "")) == 1
+                        for u in state["queue"]
+                        if u not in state["visited"]
+                    )
                     if not has_p1:
                         continue
                 
@@ -437,11 +442,12 @@ async def run() -> None:
                     # whether to follow them (e.g. P1 people links even
                     # after found_people is set).
                     new_links = get_prioritized_links(res, lab_url, state["visited"])
-                    for link in new_links:
+                    for link, anchor in new_links:
                         if link not in state["visited"] and link not in state["queue"]:
                             state["queue"].append(link)
+                            state["url_anchor"][link] = anchor
 
-                    state["queue"].sort(key=link_priority)
+                    state["queue"].sort(key=lambda u: link_priority(u, state["url_anchor"].get(u, "")))
                 else:
                     print(f"  ❌ {res.url} - {res.error_message or 'Unknown error'}")
 
