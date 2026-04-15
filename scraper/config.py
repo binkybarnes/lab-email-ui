@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent / ".env")
 
-EXA_API_KEY = os.environ["EXA_API_KEY"]
+BRAVE_API_KEY = os.environ["BRAVE_API_KEY"]
 OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
 
 DATA_DIR = Path(__file__).parent / "data"

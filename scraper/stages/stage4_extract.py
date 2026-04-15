@@ -25,41 +25,45 @@ Rules:
 - Only include people explicitly listed on the page. Do not invent names.
 - For role, pick the closest match from: PI, PhD, Postdoc, Masters, Undergrad, Staff
 - Include email and photo only if they appear on the page
+- The photo link should be very close to the name of the person
 - Omit email and photo fields entirely if not found (do not include null values)
 - If the page has no lab or people content, return {{}}
+- Do not include visiting researchers
 """
 
-MODEL = "anthropic/claude-3.5-haiku"
+MODEL = "openrouter/elephant-alpha"
 
 
 MEMBER_KEYWORDS = ["member", "people", "team", "group", "phd", "postdoc", "graduate",
                     "researcher", "professor", "staff", "alumni", "undergraduate"]
 
+total_cost = 0.0
+
 
 def build_prompt(markdown: str) -> str:
-    """Build prompt by prioritizing sections with member content.
+    """Build prompt preserving original order so photo-name proximity is intact.
 
     The crawled markdown is multiple pages concatenated. We split on the repeated
-    nav/header boundaries (each page starts with its own nav) and reorder so pages
-    with member-related keywords come first, then the homepage for overview info.
+    nav/header boundaries, drop pure nav/footer chunks (zero member keywords),
+    then reassemble in original order so the LLM sees photo → name in the same
+    sequence as the page.
     """
-    # Split into pages — crawl4ai concatenates them with double newlines.
-    # Each page typically re-includes the full nav, so look for that pattern.
-    pages = markdown.split("\n\n\n")
-    if len(pages) <= 1:
-        pages = [markdown]
+    chunks = markdown.split("\n\n\n")
+    if len(chunks) <= 1:
+        chunks = [markdown]
 
-    # Score pages: higher = more member keywords
-    def member_score(page: str) -> int:
-        lower = page.lower()
+    def member_score(chunk: str) -> int:
+        lower = chunk.lower()
         return sum(lower.count(kw) for kw in MEMBER_KEYWORDS)
 
-    # Sort: member-rich pages first, then others (homepage for overview)
-    scored = sorted(enumerate(pages), key=lambda x: member_score(x[1]), reverse=True)
+    # Drop chunks with no member-related content (nav bars, footers, etc.)
+    filtered = [c for c in chunks if member_score(c) > 0]
+    if not filtered:
+        filtered = chunks  # fallback: keep everything
 
-    # Reassemble with member-heavy pages first, cap at 16000 words
-    reordered = "\n\n".join(page for _, page in scored)
-    words = reordered.split()
+    # Reassemble in original order, cap at 16000 words
+    joined = "\n\n".join(filtered)
+    words = joined.split()
     truncated = " ".join(words[:16000])
     return f"Extract lab data from this page content:\n\n{truncated}"
 
@@ -105,6 +109,7 @@ def parse_llm_response(raw: str, slug: str = "") -> dict | None:
 
 
 async def extract_lab(client, slug: str, markdown: str) -> RawLab | None:
+    global total_cost
     try:
         response = await client.chat.completions.create(
             model=MODEL,
@@ -115,6 +120,11 @@ async def extract_lab(client, slug: str, markdown: str) -> RawLab | None:
             temperature=0,
             max_tokens=8192,
         )
+        
+        # Track OpenRouter cost
+        usage = response.usage
+        total_cost += getattr(usage, "cost", 0.0)
+        
         raw = response.choices[0].message.content
         if not raw:
             print(f"  DEBUG [{slug}]: LLM returned null/empty content")
@@ -166,9 +176,10 @@ async def run() -> None:
             empty_count += 1
             print(f"  ⚠️  Empty extraction: {slug}")
         if i % 20 == 0:
-            print(f"  {i}/{len(md_files)} extracted...")
+            print(f"  {i}/{len(md_files)} extracted... Current total cost: ${total_cost:.8f}")
 
-    print(f"\nExtracted successfully: {len(results)}")
+    print(f"\nFinal total extraction cost: ${total_cost:.8f}")
+    print(f"Extracted successfully: {len(results)}")
     print(f"Empty/failed: {empty_count}")
 
     import random
@@ -178,9 +189,6 @@ async def run() -> None:
         for lab in samples:
             print(f"\n  {lab['lab_name']} ({len(lab['members'])} members)")
             print(f"  Overview: {lab['overview'][:120]}")
-
-    estimated_cost = len(md_files) * 3000 * 0.25 / 1_000_000
-    print(f"\nEstimated token cost: ~${estimated_cost:.4f}")
 
     if not confirm(f"Save {len(results)} extracted labs to data/labs_raw.json?"):
         print("Aborted.")
