@@ -16,7 +16,7 @@ function getInitials(name) {
 
 import { memo } from 'react'
 
-function MemberCard({ member, selected, onToggle, onEmail, anySelected, isLast }) {
+function MemberCard({ member, selected, onToggle, onEmail, anySelected, isLast, emailSent }) {
   const cfg = ROLE_CONFIG[member.role] ?? ROLE_CONFIG.Undergrad
 
   return (
@@ -61,8 +61,18 @@ function MemberCard({ member, selected, onToggle, onEmail, anySelected, isLast }
       </div>
 
       {/* Email address */}
-      <div className="text-xs truncate flex-1 min-w-0" style={{ color: member.email ? '#8892a4' : '#f87171' }}>
-        {member.email || 'No email — you\'ll need to enter it'}
+      <div className="flex items-center gap-1.5 flex-1 min-w-0">
+        <span className="text-xs truncate" style={{ color: member.email ? '#8892a4' : '#f87171' }}>
+          {member.email || 'No email'}
+        </span>
+        {emailSent && (
+          <span
+            className="text-[10px] px-1 py-px flex-shrink-0 leading-tight"
+            style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80', borderRadius: '2px' }}
+          >
+            sent
+          </span>
+        )}
       </div>
 
       {/* Action */}

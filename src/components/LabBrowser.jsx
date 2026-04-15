@@ -47,6 +47,7 @@ export default function LabBrowser({
   onEmail,
   onApplyRoleSelection,
   rightOffset,
+  emailResults = {},
 }) {
   const anySelected = selectedMemberIds.size > 0
   const batchedLabs = useProgressiveList(visibleLabs)
@@ -121,6 +122,7 @@ export default function LabBrowser({
                 onToggleLabMembers={onToggleLabMembers}
                 onEmail={onEmail}
                 anySelected={anySelected}
+                emailResults={emailResults}
               />
             ))}
           </div>

@@ -62,6 +62,7 @@ export default function App() {
 
   const deferredVisibleLabs = useDeferredValue(visibleLabs)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(true)
+  const [emailResults, setEmailResults] = useState({}) // memberId -> { ok, error, composed }
   const showCheckout = selectedMembers.length > 0
   const rightOffset = showCheckout ? (isCheckoutOpen ? '18.2rem' : '3.7rem') : '0'
 
@@ -94,6 +95,7 @@ export default function App() {
         onEmail={openEmailModal}
         onApplyRoleSelection={applyRoleSelection}
         rightOffset={rightOffset}
+        emailResults={emailResults}
       />
       <AnimatePresence>
         {showCheckout && (
@@ -106,6 +108,7 @@ export default function App() {
             onEmailAll={openEmailModal}
             isOpen={isCheckoutOpen}
             setIsOpen={setIsCheckoutOpen}
+            emailResults={emailResults}
           />
         )}
       </AnimatePresence>
@@ -115,6 +118,8 @@ export default function App() {
         onNavigate={navigateModal}
         session={adminMode ? session : null}
         getAccessToken={adminMode ? getAccessToken : null}
+        emailResults={emailResults}
+        setEmailResults={setEmailResults}
       />
     </div>
   )

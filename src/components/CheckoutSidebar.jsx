@@ -11,7 +11,7 @@ const ROLE_ACCENT = {
 
 const SPRING = { type: 'spring', stiffness: 500, damping: 34, mass: 0.8 }
 
-export default function CheckoutSidebar({ selectedMembers, onRemove, onClearAll, onEmail, onEmailAll, isOpen, setIsOpen }) {
+export default function CheckoutSidebar({ selectedMembers, onRemove, onClearAll, onEmail, onEmailAll, isOpen, setIsOpen, emailResults = {} }) {
   if (selectedMembers.length === 0) return null
 
   const grouped = selectedMembers.reduce((acc, member) => {
@@ -125,8 +125,18 @@ export default function CheckoutSidebar({ selectedMembers, onRemove, onClearAll,
                       className="flex-1 min-w-0 cursor-pointer flex flex-col justify-center py-1.5"
                       onClick={e => { e.stopPropagation(); onEmail([member]) }}
                     >
-                      <div className="text-xs font-medium text-primary truncate hover:text-[#7b9fff] transition-colors whitespace-nowrap">
-                        {member.name}
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-xs font-medium text-primary truncate hover:text-[#7b9fff] transition-colors whitespace-nowrap">
+                          {member.name}
+                        </span>
+                        {emailResults[member.id]?.ok && (
+                          <span
+                            className="text-[10px] px-1 py-px flex-shrink-0 leading-tight"
+                            style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80', borderRadius: '2px' }}
+                          >
+                            sent
+                          </span>
+                        )}
                       </div>
                       <div className="text-[11px] text-muted truncate whitespace-nowrap">{member.email}</div>
                     </div>

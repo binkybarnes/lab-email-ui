@@ -2,7 +2,7 @@ import { memo, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import MemberCard from './MemberCard'
 
-function LabSection({ lab, roleFilter, selectedMemberIds, onToggleMember, onToggleLabMembers, onEmail, anySelected }) {
+function LabSection({ lab, roleFilter, selectedMemberIds, onToggleMember, onToggleLabMembers, onEmail, anySelected, emailResults = {} }) {
   const [isOpen, setIsOpen] = useState(true)
 
   const members = roleFilter === 'all'
@@ -102,6 +102,7 @@ function LabSection({ lab, roleFilter, selectedMemberIds, onToggleMember, onTogg
                   onEmail={onEmail}
                   anySelected={anySelected}
                   isLast={i === members.length - 1}
+                  emailSent={!!emailResults[member.id]?.ok}
                 />
               ))}
             </div>
@@ -116,6 +117,7 @@ export default memo(LabSection, (prev, next) => {
   if (prev.roleFilter !== next.roleFilter) return false
   if (prev.anySelected !== next.anySelected) return false
   if (prev.lab !== next.lab) return false
+  if (prev.emailResults !== next.emailResults) return false
   const ids = prev.lab.members.map(m => m.id)
   return ids.every(id => prev.selectedMemberIds.has(id) === next.selectedMemberIds.has(id))
 })

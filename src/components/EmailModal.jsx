@@ -51,8 +51,22 @@ function openGmailCompose({ to, subject, body }) {
   window.open(`https://mail.google.com/mail/?${params}`, '_blank')
 }
 
+const OVERRIDE_KEY = 'member_email_overrides'
+
+function loadOverrides() {
+  try { return JSON.parse(localStorage.getItem(OVERRIDE_KEY) || '{}') } catch { return {} }
+}
+
+function saveOverride(memberId, email) {
+  const overrides = loadOverrides()
+  if (email) overrides[memberId] = email
+  else delete overrides[memberId]
+  localStorage.setItem(OVERRIDE_KEY, JSON.stringify(overrides))
+}
+
 function buildDrafts(members) {
-  return Object.fromEntries(members.map(m => [m.id, { subject: '', body: '', toOverride: '' }]))
+  const overrides = loadOverrides()
+  return Object.fromEntries(members.map(m => [m.id, { subject: '', body: '', toOverride: overrides[m.id] ?? '' }]))
 }
 
 function DisclaimerPopup({ onAccept, onCancel }) {
@@ -109,13 +123,13 @@ function DisclaimerPopup({ onAccept, onCancel }) {
   )
 }
 
-export default function EmailModal({ modal, onClose, onNavigate, session, getAccessToken }) {
+export default function EmailModal({ modal, onClose, onNavigate, session, getAccessToken, emailResults, setEmailResults }) {
   const { open, members, currentIndex } = modal
   const [drafts, setDrafts] = useState({})
   const [sending, setSending] = useState(false)
-  const [results, setResults] = useState({}) // memberId -> { ok, error }
+  const results = emailResults
+  const setResults = setEmailResults
   const [showDisclaimer, setShowDisclaimer] = useState(false)
-  const [pendingSendAll, setPendingSendAll] = useState(false)
   const prevMembersRef = useRef(null)
 
   const isAdmin = !!session
@@ -126,12 +140,12 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
     if (prevMembersRef.current !== members) {
       prevMembersRef.current = members
       setDrafts(buildDrafts(members))
-      setResults({})
       setSending(false)
     }
   }, [open, members])
 
   function updateDraft(memberId, field, value) {
+    if (field === 'toOverride') saveOverride(memberId, value)
     setDrafts(prev => ({ ...prev, [memberId]: { ...prev[memberId], [field]: value } }))
   }
 
@@ -139,7 +153,10 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
     if (!open) return
     function onKey(e) {
       if (e.key === 'Escape') onClose()
-      if (e.key === 'Enter' && e.ctrlKey) requireDisclaimer(false)
+      if (e.key === 'Enter' && e.ctrlKey) requireDisclaimer()
+      const inInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA'
+      if (!inInput && e.key === 'ArrowLeft') onNavigate(-1)
+      if (!inInput && e.key === 'ArrowRight') onNavigate(1)
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
@@ -153,12 +170,11 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
   const currentResult = results[member.id]
 
   // --- Disclaimer gate ---
-  function requireDisclaimer(sendAll) {
+  function requireDisclaimer() {
     const accepted = localStorage.getItem('disclaimer_accepted')
     if (accepted) {
-      sendAll ? executeSendAll() : executeSend()
+      executeSend()
     } else {
-      setPendingSendAll(sendAll)
       setShowDisclaimer(true)
     }
   }
@@ -166,7 +182,7 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
   function handleDisclaimerAccept() {
     localStorage.setItem('disclaimer_accepted', 'true')
     setShowDisclaimer(false)
-    pendingSendAll ? executeSendAll() : executeSend()
+    executeSend()
   }
 
   // --- Send logic (branches on admin vs normal) ---
@@ -175,14 +191,6 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
       doApiSend()
     } else {
       doComposeSend()
-    }
-  }
-
-  function executeSendAll() {
-    if (isAdmin) {
-      doApiSendAll()
-    } else {
-      doComposeSendAll()
     }
   }
 
@@ -197,22 +205,7 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
       setResults(prev => ({ ...prev, [member.id]: { ok: false, error: e.message } }))
     }
     setSending(false)
-  }
-
-  async function doApiSendAll() {
-    setSending(true)
-    try {
-      const token = await getAccessToken()
-      for (const m of members) {
-        if (results[m.id]?.ok) continue
-        const d = drafts[m.id] ?? { subject: '', body: '', toOverride: '' }
-        const result = await dispatchEmail({ member: m, draft: d, accessToken: token, senderEmail: session.user.email })
-        setResults(prev => ({ ...prev, [m.id]: result }))
-      }
-    } catch (e) {
-      setResults(prev => ({ ...prev, [member.id]: { ok: false, error: e.message } }))
-    }
-    setSending(false)
+    autoAdvance()
   }
 
   // Normal user: open Gmail compose tab
@@ -220,20 +213,28 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
     const to = member.email || draft.toOverride
     openGmailCompose({ to, subject: draft.subject, body: draft.body })
     setResults(prev => ({ ...prev, [member.id]: { ok: true, composed: true } }))
+    autoAdvance()
   }
 
-  function doComposeSendAll() {
-    for (const m of members) {
-      if (results[m.id]?.ok) continue
-      const d = drafts[m.id] ?? { subject: '', body: '', toOverride: '' }
-      const to = m.email || d.toOverride
-      openGmailCompose({ to, subject: d.subject, body: d.body })
-      setResults(prev => ({ ...prev, [m.id]: { ok: true, composed: true } }))
+  // Auto-advance to next unsent member
+  function autoAdvance() {
+    if (!isMulti) return
+    for (let i = currentIndex + 1; i < members.length; i++) {
+      if (!results[members[i].id]?.ok) {
+        onNavigate(i - currentIndex)
+        return
+      }
+    }
+    for (let i = 0; i < currentIndex; i++) {
+      if (!results[members[i].id]?.ok) {
+        onNavigate(i - currentIndex)
+        return
+      }
     }
   }
 
   const sentCount = Object.values(results).filter(r => r.ok).length
-  const failedCount = Object.values(results).filter(r => !r.ok).length
+
 
   return (
     <div
@@ -320,7 +321,18 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
           )}
           {/* To */}
           <div>
-            <label className="text-xs text-muted block mb-1">To</label>
+            <div className="flex items-center gap-2 mb-1">
+              <label className="text-xs text-muted">To</label>
+              {!member.email && !!loadOverrides()[member.id] && (
+                <span
+                  className="text-[10px] px-1 py-px leading-tight"
+                  style={{ background: 'rgba(234,179,8,0.12)', color: '#ca8a04', border: '1px solid rgba(234,179,8,0.25)', borderRadius: '2px' }}
+                  title="Email entered manually by you — not from scraped data"
+                >
+                  user-entered
+                </span>
+              )}
+            </div>
             {member.email ? (
               <div
                 className="px-3 py-1.5 text-xs text-secondary"
@@ -334,7 +346,7 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
                 value={draft.toOverride ?? ''}
                 onChange={e => updateDraft(member.id, 'toOverride', e.target.value)}
                 placeholder={`Enter email for ${member.name}...`}
-                style={{ ...INPUT_STYLE, borderColor: '#f87171' }}
+                style={{ ...INPUT_STYLE, borderColor: draft.toOverride ? '#363b47' : '#f87171' }}
                 onFocus={e => e.target.style.borderColor = '#4d6dff'}
                 onBlur={e => { if (!draft.toOverride) e.target.style.borderColor = '#f87171' }}
               />
@@ -384,43 +396,27 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
             >
               ✦ AI Writer
             </button>
-            {isMulti && (sentCount > 0 || failedCount > 0) && (
-              <span className="text-xs text-muted">
-                {sentCount > 0 && <span style={{ color: '#4ade80' }}>{sentCount} {isAdmin ? 'sent' : 'opened'}</span>}
-                {sentCount > 0 && failedCount > 0 && ' · '}
-                {failedCount > 0 && <span style={{ color: '#f87171' }}>{failedCount} failed</span>}
+            {isMulti && sentCount > 0 && (
+              <span className="text-xs" style={{ color: '#4ade80' }}>
+                {sentCount}/{members.length} {isAdmin ? 'sent' : 'opened'}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            {isMulti && (
-              <button
-                onClick={() => requireDisclaimer(true)}
-                disabled={sending}
-                className="text-xs px-3 py-1.5 transition-colors text-secondary disabled:opacity-50"
-                style={{ border: '1px solid #363b47', background: 'transparent', borderRadius: '3px' }}
-                onMouseEnter={e => !sending && (e.currentTarget.style.background = '#272b34')}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              >
-                {sending ? 'sending...' : isAdmin ? `send all (${members.length})` : `open all (${members.length})`}
-              </button>
+          <button
+            onClick={() => requireDisclaimer()}
+            disabled={sending}
+            className="text-xs px-4 py-1.5 transition-all duration-150 disabled:opacity-50 flex items-center gap-2"
+            style={{ background: '#4d6dff', color: '#fff', borderRadius: '3px' }}
+            onMouseEnter={e => !sending && (e.currentTarget.style.background = '#3d5df0')}
+            onMouseLeave={e => e.currentTarget.style.background = '#4d6dff'}
+            title="Ctrl+Enter"
+          >
+            {sending ? 'sending...' : currentResult?.ok ? (isAdmin ? 'Resend' : 'Open again') : isAdmin ? 'Send' : 'Open in Gmail'}
+            {!sending && (
+              <span style={{ opacity: 0.55, fontSize: 10 }}>ctrl + enter</span>
             )}
-            <button
-              onClick={() => requireDisclaimer(false)}
-              disabled={sending || currentResult?.ok}
-              className="text-xs px-4 py-1.5 transition-all duration-150 disabled:opacity-50 flex items-center gap-2"
-              style={{ background: '#4d6dff', color: '#fff', borderRadius: '3px' }}
-              onMouseEnter={e => !sending && !currentResult?.ok && (e.currentTarget.style.background = '#3d5df0')}
-              onMouseLeave={e => e.currentTarget.style.background = '#4d6dff'}
-              title="Ctrl+Enter"
-            >
-              {sending ? 'sending...' : currentResult?.ok ? (currentResult.composed ? 'opened' : 'sent') : isAdmin ? 'Send' : 'Open in Gmail'}
-              {!sending && !currentResult?.ok && (
-                <span style={{ opacity: 0.55, fontSize: 10 }}>ctrl + enter</span>
-              )}
-            </button>
-          </div>
+          </button>
         </div>
       </div>
       <AnimatePresence>
