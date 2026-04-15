@@ -11,7 +11,7 @@ const ROLE_ACCENT = {
 
 const SPRING = { type: 'spring', stiffness: 500, damping: 34, mass: 0.8 }
 
-export default function CheckoutSidebar({ selectedMembers, onRemove, onEmail, onEmailAll, isOpen, setIsOpen }) {
+export default function CheckoutSidebar({ selectedMembers, onRemove, onClearAll, onEmail, onEmailAll, isOpen, setIsOpen }) {
   if (selectedMembers.length === 0) return null
 
   const grouped = selectedMembers.reduce((acc, member) => {
@@ -154,12 +154,21 @@ export default function CheckoutSidebar({ selectedMembers, onRemove, onEmail, on
         style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
       >
         <div
-          className="px-3 py-3"
+          className="px-3 py-3 flex gap-2"
           style={{ borderTop: '1px solid #363b47' }}
         >
           <button
+            onClick={onClearAll}
+            className="py-2 text-xs transition-all duration-150 truncate flex-shrink-0 px-3"
+            style={{ background: 'transparent', color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', borderRadius: '3px' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,113,113,0.08)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          >
+            Clear
+          </button>
+          <button
             onClick={() => onEmailAll(selectedMembers)}
-            className="w-full py-2 text-xs transition-all duration-150 truncate"
+            className="flex-1 py-2 text-xs transition-all duration-150 truncate"
             style={{ background: '#4d6dff', color: '#fff', borderRadius: '3px' }}
             onMouseEnter={e => e.currentTarget.style.background = '#3d5df0'}
             onMouseLeave={e => e.currentTarget.style.background = '#4d6dff'}

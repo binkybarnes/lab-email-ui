@@ -28,6 +28,10 @@ export function useAuth() {
       options: {
         scopes: 'https://www.googleapis.com/auth/gmail.send',
         redirectTo: window.location.origin,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
       },
     })
   }

@@ -41,6 +41,16 @@ async function dispatchEmail({ member, draft, accessToken, senderEmail }) {
   return result
 }
 
+function openGmailCompose({ to, subject, body }) {
+  const params = new URLSearchParams({
+    view: 'cm',
+    to: to || '',
+    su: subject || '',
+    body: body || '',
+  })
+  window.open(`https://mail.google.com/mail/?${params}`, '_blank')
+}
+
 function buildDrafts(members) {
   return Object.fromEntries(members.map(m => [m.id, { subject: '', body: '', toOverride: '' }]))
 }
@@ -48,7 +58,7 @@ function buildDrafts(members) {
 function DisclaimerPopup({ onAccept, onCancel }) {
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4"
       onClick={e => { if (e.target === e.currentTarget) onCancel() }}
     >
       <motion.div
@@ -68,7 +78,10 @@ function DisclaimerPopup({ onAccept, onCancel }) {
         <div className="space-y-5 text-base text-muted leading-relaxed">
           <ul className="list-disc pl-5 space-y-4">
             <li>
-              <strong className="text-primary font-medium">Follow Lab Instructions:</strong> Always check the lab's website or PI's page first. If they have specific rules for applying or aren't taking students, follow those instructions instead.
+              <strong className="text-primary font-medium">Outdated Information:</strong> Make sure to check if the person you're emailing is still at the lab.
+            </li>
+            <li>
+              <strong className="text-primary font-medium">Follow Lab Instructions:</strong> Always check the lab's website first. If they have specific rules for applying or aren't taking students, follow those instructions instead.
             </li>
             <li>
               <strong className="text-primary font-medium">Do Not Spam:</strong> Please don't mass-email everyone in a lab. Only contact individuals whose research specifically aligns with yours.
@@ -96,7 +109,7 @@ function DisclaimerPopup({ onAccept, onCancel }) {
   )
 }
 
-export default function EmailModal({ modal, onClose, onNavigate, session, signIn, getAccessToken }) {
+export default function EmailModal({ modal, onClose, onNavigate, session, getAccessToken }) {
   const { open, members, currentIndex } = modal
   const [drafts, setDrafts] = useState({})
   const [sending, setSending] = useState(false)
@@ -104,6 +117,8 @@ export default function EmailModal({ modal, onClose, onNavigate, session, signIn
   const [showDisclaimer, setShowDisclaimer] = useState(false)
   const [pendingSendAll, setPendingSendAll] = useState(false)
   const prevMembersRef = useRef(null)
+
+  const isAdmin = !!session
 
   // Re-initialize drafts only when the member list changes (new modal open)
   useEffect(() => {
@@ -122,28 +137,26 @@ export default function EmailModal({ modal, onClose, onNavigate, session, signIn
 
   useEffect(() => {
     if (!open) return
-    function onKey(e) { if (e.key === 'Escape') onClose() }
+    function onKey(e) {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'Enter' && e.ctrlKey) requireDisclaimer(false)
+    }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  }, [open, onClose, drafts, currentIndex, members, results, sending])
 
   if (!open || members.length === 0) return null
 
   const member = members[currentIndex]
-  const draft = drafts[member.id] ?? { subject: '', body: '' }
+  const draft = drafts[member.id] ?? { subject: '', body: '', toOverride: '' }
   const isMulti = members.length > 1
   const currentResult = results[member.id]
 
-  function requireDisclaimerOrSignIn(sendAll) {
-    // If not signed in, trigger Google sign-in first
-    if (!session) {
-      signIn()
-      return
-    }
-
+  // --- Disclaimer gate ---
+  function requireDisclaimer(sendAll) {
     const accepted = localStorage.getItem('disclaimer_accepted')
     if (accepted) {
-      sendAll ? doSendAll() : doSend()
+      sendAll ? executeSendAll() : executeSend()
     } else {
       setPendingSendAll(sendAll)
       setShowDisclaimer(true)
@@ -153,10 +166,28 @@ export default function EmailModal({ modal, onClose, onNavigate, session, signIn
   function handleDisclaimerAccept() {
     localStorage.setItem('disclaimer_accepted', 'true')
     setShowDisclaimer(false)
-    pendingSendAll ? doSendAll() : doSend()
+    pendingSendAll ? executeSendAll() : executeSend()
   }
 
-  async function doSend() {
+  // --- Send logic (branches on admin vs normal) ---
+  function executeSend() {
+    if (isAdmin) {
+      doApiSend()
+    } else {
+      doComposeSend()
+    }
+  }
+
+  function executeSendAll() {
+    if (isAdmin) {
+      doApiSendAll()
+    } else {
+      doComposeSendAll()
+    }
+  }
+
+  // Admin: direct Gmail API send
+  async function doApiSend() {
     setSending(true)
     try {
       const token = await getAccessToken()
@@ -168,13 +199,13 @@ export default function EmailModal({ modal, onClose, onNavigate, session, signIn
     setSending(false)
   }
 
-  async function doSendAll() {
+  async function doApiSendAll() {
     setSending(true)
     try {
       const token = await getAccessToken()
       for (const m of members) {
         if (results[m.id]?.ok) continue
-        const d = drafts[m.id] ?? { subject: '', body: '' }
+        const d = drafts[m.id] ?? { subject: '', body: '', toOverride: '' }
         const result = await dispatchEmail({ member: m, draft: d, accessToken: token, senderEmail: session.user.email })
         setResults(prev => ({ ...prev, [m.id]: result }))
       }
@@ -182,6 +213,23 @@ export default function EmailModal({ modal, onClose, onNavigate, session, signIn
       setResults(prev => ({ ...prev, [member.id]: { ok: false, error: e.message } }))
     }
     setSending(false)
+  }
+
+  // Normal user: open Gmail compose tab
+  function doComposeSend() {
+    const to = member.email || draft.toOverride
+    openGmailCompose({ to, subject: draft.subject, body: draft.body })
+    setResults(prev => ({ ...prev, [member.id]: { ok: true, composed: true } }))
+  }
+
+  function doComposeSendAll() {
+    for (const m of members) {
+      if (results[m.id]?.ok) continue
+      const d = drafts[m.id] ?? { subject: '', body: '', toOverride: '' }
+      const to = m.email || d.toOverride
+      openGmailCompose({ to, subject: d.subject, body: d.body })
+      setResults(prev => ({ ...prev, [m.id]: { ok: true, composed: true } }))
+    }
   }
 
   const sentCount = Object.values(results).filter(r => r.ok).length
@@ -240,7 +288,9 @@ export default function EmailModal({ modal, onClose, onNavigate, session, signIn
                   color: currentResult.ok ? '#4ade80' : '#f87171',
                 }}
               >
-                {currentResult.ok ? 'sent ✓' : 'failed'}
+                {currentResult.ok
+                  ? currentResult.composed ? 'opened' : 'sent'
+                  : 'failed'}
               </span>
             )}
           </div>
@@ -336,7 +386,7 @@ export default function EmailModal({ modal, onClose, onNavigate, session, signIn
             </button>
             {isMulti && (sentCount > 0 || failedCount > 0) && (
               <span className="text-xs text-muted">
-                {sentCount > 0 && <span style={{ color: '#4ade80' }}>{sentCount} sent</span>}
+                {sentCount > 0 && <span style={{ color: '#4ade80' }}>{sentCount} {isAdmin ? 'sent' : 'opened'}</span>}
                 {sentCount > 0 && failedCount > 0 && ' · '}
                 {failedCount > 0 && <span style={{ color: '#f87171' }}>{failedCount} failed</span>}
               </span>
@@ -346,25 +396,29 @@ export default function EmailModal({ modal, onClose, onNavigate, session, signIn
           <div className="flex items-center gap-2">
             {isMulti && (
               <button
-                onClick={() => requireDisclaimerOrSignIn(true)}
+                onClick={() => requireDisclaimer(true)}
                 disabled={sending}
                 className="text-xs px-3 py-1.5 transition-colors text-secondary disabled:opacity-50"
                 style={{ border: '1px solid #363b47', background: 'transparent', borderRadius: '3px' }}
                 onMouseEnter={e => !sending && (e.currentTarget.style.background = '#272b34')}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
-                {sending ? 'sending...' : `send all (${members.length})`}
+                {sending ? 'sending...' : isAdmin ? `send all (${members.length})` : `open all (${members.length})`}
               </button>
             )}
             <button
-              onClick={() => requireDisclaimerOrSignIn(false)}
+              onClick={() => requireDisclaimer(false)}
               disabled={sending || currentResult?.ok}
-              className="text-xs px-4 py-1.5 transition-all duration-150 disabled:opacity-50"
+              className="text-xs px-4 py-1.5 transition-all duration-150 disabled:opacity-50 flex items-center gap-2"
               style={{ background: '#4d6dff', color: '#fff', borderRadius: '3px' }}
               onMouseEnter={e => !sending && !currentResult?.ok && (e.currentTarget.style.background = '#3d5df0')}
               onMouseLeave={e => e.currentTarget.style.background = '#4d6dff'}
+              title="Ctrl+Enter"
             >
-              {!session ? 'Sign in to Send' : sending ? 'sending...' : currentResult?.ok ? 'sent ✓' : 'Send'}
+              {sending ? 'sending...' : currentResult?.ok ? (currentResult.composed ? 'opened' : 'sent') : isAdmin ? 'Send' : 'Open in Gmail'}
+              {!sending && !currentResult?.ok && (
+                <span style={{ opacity: 0.55, fontSize: 10 }}>ctrl + enter</span>
+              )}
             </button>
           </div>
         </div>
