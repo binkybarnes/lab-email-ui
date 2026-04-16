@@ -4,6 +4,8 @@ import { sendEmail } from '../utils/gmailApi'
 import { supabase } from '../lib/supabase'
 import { getProfile } from '../utils/profile'
 import { generateEmailStream } from '../utils/openrouter'
+import useUsageStore from '../stores/useUsageStore'
+import { AiActionButton, UsageIndicator, ExhaustedMessage } from './AiComponents'
 
 const INPUT_STYLE = {
   background: '#22262e',
@@ -125,7 +127,10 @@ function DisclaimerPopup({ onAccept, onCancel }) {
   )
 }
 
-function AiDrawer({ onGenerate, onNeedProfile }) {
+function AiDrawer({ onGenerate, onNeedProfile, isAdmin }) {
+  const remaining = useUsageStore(s => s.remaining)
+  const setRemaining = useUsageStore(s => s.setRemaining)
+  const setResetsAt = useUsageStore(s => s.setResetsAt)
   const [instructions, setInstructions] = useState('')
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState(null)
@@ -144,11 +149,15 @@ function AiDrawer({ onGenerate, onNeedProfile }) {
         options: { instructions: instructions.trim() || undefined },
       })
       if (result?.error) setError(result.error)
+      if (result?.remaining !== undefined) setRemaining(result.remaining)
+      if (result?.resetsAt) setResetsAt(result.resetsAt)
     } catch (e) {
       setError(e.message || 'Something went wrong')
     }
     setGenerating(false)
   }
+
+  const exhausted = !isAdmin && remaining === 0
 
   return (
     <motion.div
@@ -193,38 +202,20 @@ function AiDrawer({ onGenerate, onNeedProfile }) {
 
         {/* Action row */}
         <div className="flex items-center justify-between gap-3">
-          <button
+          <AiActionButton
             onClick={handleGenerate}
-            disabled={generating}
-            className="text-xs px-4 py-1.5 text-white transition-all disabled:opacity-60 flex items-center gap-1.5"
-            style={{ background: '#4d6dff', borderRadius: '3px' }}
-            onMouseEnter={e => !generating && (e.currentTarget.style.background = '#3d5df0')}
-            onMouseLeave={e => e.currentTarget.style.background = '#4d6dff'}
+            disabled={exhausted}
+            loading={generating}
+            loadingText="Generating..."
           >
-            {generating ? (
-              <>
-                <span
-                  className="animate-spin"
-                  style={{
-                    display: 'inline-block',
-                    width: 10,
-                    height: 10,
-                    border: '1.5px solid rgba(255,255,255,0.3)',
-                    borderTopColor: '#fff',
-                    borderRadius: '50%',
-                  }}
-                />
-                Generating...
-              </>
-            ) : (
-              <>✦ Generate</>
-            )}
-          </button>
-          {!error && (
-            <span className="text-xs" style={{ color: '#334155' }}>Regenerate anytime for a new version</span>
-          )}
-          {error && (
+            ✦ Generate
+          </AiActionButton>
+          {exhausted ? (
+            <ExhaustedMessage isAdmin={isAdmin} />
+          ) : error ? (
             <span className="text-xs" style={{ color: '#f87171' }}>{error}</span>
+          ) : (
+            <UsageIndicator isAdmin={isAdmin} />
           )}
         </div>
       </div>
@@ -242,7 +233,7 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
   const [showAiDrawer, setShowAiDrawer] = useState(false)
   const prevMembersRef = useRef(null)
 
-  const isAdmin = !!session
+  const canSendDirect = !!session
 
   useEffect(() => {
     if (!open) return
@@ -294,7 +285,7 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
   }
 
   function executeSend() {
-    if (isAdmin) {
+    if (canSendDirect) {
       doApiSend()
     } else {
       doComposeSend()
@@ -348,7 +339,7 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
 
   async function handleGenerate({ profile, options }) {
     try {
-      await generateEmailStream({
+      const result = await generateEmailStream({
         lab: { name: member.labName ?? '', overview: member.labOverview ?? '' },
         member: { name: member.name, role: member.role ?? '' },
         profile,
@@ -356,7 +347,7 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
         onSubject: (partial) => updateDraft(member.id, 'subject', partial),
         onBody: (partial) => updateDraft(member.id, 'body', partial),
       })
-      return {}
+      return { remaining: result.remaining, resetsAt: result.resetsAt }
     } catch (e) {
       return { error: e.message || 'Generation failed' }
     }
@@ -516,6 +507,7 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
             <AiDrawer
               onGenerate={handleGenerate}
               onNeedProfile={onOpenProfile}
+              isAdmin={canSendDirect}
             />
           )}
         </AnimatePresence>
@@ -542,7 +534,7 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
             </button>
             {isMulti && sentCount > 0 && (
               <span className="text-xs" style={{ color: '#4ade80' }}>
-                {sentCount}/{members.length} {isAdmin ? 'sent' : 'opened'}
+                {sentCount}/{members.length} {canSendDirect ? 'sent' : 'opened'}
               </span>
             )}
           </div>
@@ -556,7 +548,7 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
             onMouseLeave={e => e.currentTarget.style.background = '#4d6dff'}
             title="Ctrl+Enter"
           >
-            {sending ? 'sending...' : currentResult?.ok ? (isAdmin ? 'Resend' : 'Open again') : isAdmin ? 'Send' : 'Open in Gmail'}
+            {sending ? 'sending...' : currentResult?.ok ? (canSendDirect ? 'Resend' : 'Open again') : canSendDirect ? 'Send' : 'Open in Gmail'}
             {!sending && (
               <span style={{ opacity: 0.55, fontSize: 10 }}>ctrl + enter</span>
             )}

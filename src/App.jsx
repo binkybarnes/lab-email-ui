@@ -1,7 +1,8 @@
-import { useEffect, useDeferredValue, useRef, useState } from 'react'
+import { useEffect, useDeferredValue, useState } from 'react'
 import { AnimatePresence } from 'motion/react'
 import { useAppState } from './hooks/useAppState'
 import { useAuth } from './hooks/useAuth'
+import useUsageStore from './stores/useUsageStore'
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import LabBrowser from './components/LabBrowser'
@@ -9,36 +10,24 @@ import CheckoutSidebar from './components/CheckoutSidebar'
 import EmailModal from './components/EmailModal'
 import ProfileModal from './components/ProfileModal'
 
-const KONAMI = 'admin'
-
-function useAdminMode() {
-  const [adminMode, setAdminMode] = useState(() => localStorage.getItem('admin_mode') === 'true')
-  const bufferRef = useRef('')
-
-  useEffect(() => {
-    function onKey(e) {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
-      const next = (bufferRef.current + e.key.toLowerCase()).slice(-KONAMI.length)
-      bufferRef.current = next
-      if (next === KONAMI) {
-        bufferRef.current = ''
-        setAdminMode(m => {
-          const toggled = !m
-          if (toggled) localStorage.setItem('admin_mode', 'true')
-          else localStorage.removeItem('admin_mode')
-          return toggled
-        })
-      }
+function useDevMode() {
+  const [devMode] = useState(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('dev') === '0') {
+      localStorage.removeItem('dev_mode')
+      return false
     }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [])
-
-  return adminMode
+    if (params.has('dev')) {
+      localStorage.setItem('dev_mode', 'true')
+      return true
+    }
+    return localStorage.getItem('dev_mode') === 'true'
+  })
+  return devMode
 }
 
 export default function App() {
-  const adminMode = useAdminMode()
+  const devMode = useDevMode()
   const { session, loading, signIn, signOut, getAccessToken } = useAuth()
 
   const {
@@ -65,6 +54,8 @@ export default function App() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(true)
   const [emailResults, setEmailResults] = useState({}) // memberId -> { ok, error, composed }
   const [profileOpen, setProfileOpen] = useState(false)
+
+  useEffect(() => { useUsageStore.getState().fetch() }, [])
   const showCheckout = selectedMembers.length > 0
   const rightOffset = showCheckout ? (isCheckoutOpen ? '18.2rem' : '3.7rem') : '0'
 
@@ -75,10 +66,10 @@ export default function App() {
       <Navbar
         selectedCount={selectedMembers.length}
         rightOffset={rightOffset}
-        user={adminMode ? (session?.user ?? null) : null}
-        onSignOut={adminMode && session ? signOut : null}
-        adminMode={adminMode}
-        onSignIn={adminMode && !session ? signIn : null}
+        user={devMode ? (session?.user ?? null) : null}
+        onSignOut={devMode && session ? signOut : null}
+        devMode={devMode}
+        onSignIn={devMode && !session ? signIn : null}
         onProfile={() => setProfileOpen(true)}
       />
       <Sidebar
@@ -119,8 +110,8 @@ export default function App() {
         modal={emailModal}
         onClose={closeEmailModal}
         onNavigate={navigateModal}
-        session={adminMode ? session : null}
-        getAccessToken={adminMode ? getAccessToken : null}
+        session={devMode ? session : null}
+        getAccessToken={devMode ? getAccessToken : null}
         emailResults={emailResults}
         setEmailResults={setEmailResults}
         onOpenProfile={() => setProfileOpen(true)}

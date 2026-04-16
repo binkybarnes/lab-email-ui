@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'motion/react'
 import { getProfile, saveProfile } from '../utils/profile'
 import { reviewProfile } from '../utils/openrouter'
+import useUsageStore from '../stores/useUsageStore'
+import { AiActionButton, UsageIndicator, ExhaustedMessage } from './AiComponents'
 
 const REVIEW_KEY = 'profile_review'
 
@@ -45,6 +47,9 @@ const FIELD_LABELS = {
 }
 
 export default function ProfileModal({ open, onClose, onSave }) {
+  const remaining = useUsageStore(s => s.remaining)
+  const setRemaining = useUsageStore(s => s.setRemaining)
+  const setResetsAt = useUsageStore(s => s.setResetsAt)
   const [form, setForm] = useState(() => {
     const saved = getProfile()
     return saved ?? { name: '', status: '', institution: '', experience: '', whyField: '', goal: '', standout: '' }
@@ -73,6 +78,8 @@ export default function ProfileModal({ open, onClose, onSave }) {
       const s = result.suggestions || []
       setSuggestions(s)
       saveReview(s)
+      if (result.remaining !== undefined) setRemaining(result.remaining)
+      if (result.resetsAt) setResetsAt(result.resetsAt)
     } catch (e) {
       setReviewError(e.message || 'Review failed')
     }
@@ -119,9 +126,27 @@ export default function ProfileModal({ open, onClose, onSave }) {
               ✕
             </button>
           </div>
+          {suggestions && suggestions.length === 0 && (
+              <div
+                className="flex items-center gap-2 px-3 py-2 text-xs"
+                style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: '3px', color: '#4ade80' }}
+              >
+                <span>✓</span>
+                <span>Profile looks good — you're ready to generate emails.</span>
+              </div>
+            )}
 
           {/* Fields */}
           <div className="flex flex-col gap-4 px-5 py-4 overflow-y-auto flex-1">
+            
+            {reviewError && !suggestions && (
+              <div
+                className="flex items-center gap-2 px-3 py-2 text-xs"
+                style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', borderRadius: '3px', color: '#f87171' }}
+              >
+                {reviewError}
+              </div>
+            )}
             {FIELDS.map(({ key, label, placeholder, type, rows, maxLength }) => {
               const len = form[key]?.length || 0
               const showCounter = maxLength && len > maxLength * 0.8
@@ -178,50 +203,28 @@ export default function ProfileModal({ open, onClose, onSave }) {
               🔒 Your profile is saved only on this device. We never store or transmit your personal information.
             </p>
             <div className="flex justify-between items-center">
-              <button
+              <div className="flex items-center gap-3">
+              <AiActionButton
                 onClick={handleReview}
-                disabled={reviewing || !canSave}
-                className="text-xs px-3 py-1.5 transition-all disabled:opacity-40 flex items-center gap-1.5"
-                style={{ background: 'transparent', border: '1px solid #363b47', borderRadius: '3px', color: '#94a3b8' }}
-                onMouseEnter={e => !reviewing && canSave && (e.currentTarget.style.background = '#272b34')}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                disabled={!canSave || remaining === 0}
+                loading={reviewing}
+                loadingText="Checking..."
               >
-                {reviewing ? (
-                  <>
-                    <span
-                      className="animate-spin"
-                      style={{
-                        display: 'inline-block',
-                        width: 10,
-                        height: 10,
-                        border: '1.5px solid rgba(148,163,184,0.3)',
-                        borderTopColor: '#94a3b8',
-                        borderRadius: '50%',
-                      }}
-                    />
-                    Checking...
-                  </>
-                ) : (
-                  '✦ Profile feedback'
-                )}
-              </button>
+                ✦ Profile feedback
+              </AiActionButton>
+              {remaining === 0 ? <ExhaustedMessage /> : <UsageIndicator />}
+              </div>
               <div className="flex gap-2">
                 <button
                   onClick={onClose}
-                  className="text-xs px-3 py-1.5 text-muted transition-colors"
-                  style={{ border: '1px solid #363b47', borderRadius: '3px', background: 'transparent' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#272b34'; e.currentTarget.style.color = '#e4e7ed' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '' }}
+                  className="text-xs px-3 py-1.5 text-muted hover:text-primary hover:bg-panel-hover border border-border rounded-sm transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={!canSave}
-                  className="text-xs px-4 py-1.5 text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{ background: '#4d6dff', borderRadius: '3px' }}
-                  onMouseEnter={e => canSave && (e.currentTarget.style.background = '#3d5df0')}
-                  onMouseLeave={e => e.currentTarget.style.background = '#4d6dff'}
+                  className="text-xs px-4 py-1.5 text-white bg-accent hover:bg-accent-hover rounded-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Save profile
                 </button>
@@ -248,33 +251,6 @@ export default function ProfileModal({ open, onClose, onSave }) {
                 {s.suggestion}
               </div>
             ))}
-          </div>
-        )}
-        {suggestions && suggestions.length === 0 && (
-          <div
-            className="flex items-center px-5"
-            style={{
-              width: '240px',
-              flexShrink: 0,
-              borderLeft: '1px solid #363b47',
-              background: 'rgba(74,222,128,0.03)',
-            }}
-          >
-            <span className="text-sm" style={{ color: '#4ade80' }}>
-              Profile looks good — you're ready to generate emails.
-            </span>
-          </div>
-        )}
-        {reviewError && !suggestions && (
-          <div
-            className="flex items-center px-5"
-            style={{
-              width: '240px',
-              flexShrink: 0,
-              borderLeft: '1px solid #363b47',
-            }}
-          >
-            <span className="text-xs" style={{ color: '#f87171' }}>{reviewError}</span>
           </div>
         )}
       </motion.div>

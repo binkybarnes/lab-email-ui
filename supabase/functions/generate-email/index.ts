@@ -37,45 +37,61 @@ function isRateLimited(ip: string): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Daily usage limit — persisted in Supabase `daily_usage` table.
-// Returns { allowed: bool, remaining: number }.
+// Usage limit — persisted in Supabase `daily_usage` table.
+// Uses 5-hour universal windows (0:00, 5:00, 10:00, 15:00, 20:00 UTC).
+// Returns { allowed: bool, remaining: number, resetsAt: string }.
 // ---------------------------------------------------------------------------
-const DAILY_LIMIT = 100
+const USAGE_LIMIT = 50
+const WINDOW_SECONDS = 18_000 // 5 hours
 
-async function checkDailyLimit(ip: string): Promise<{ allowed: boolean; remaining: number }> {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  const db = createClient(supabaseUrl, serviceKey)
+// Shared Supabase service-role client — reused across requests in the same isolate
+let _db: ReturnType<typeof createClient> | null = null
+function getDb() {
+  if (!_db) {
+    _db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+  }
+  return _db
+}
 
-  const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+async function checkUsageLimit(ip: string): Promise<{ allowed: boolean; remaining: number; resetsAt: string }> {
+  const db = getDb()
 
-  // Upsert: increment count for today, insert if missing
   const { data, error } = await db.rpc('increment_daily_usage', {
     p_ip: ip,
-    p_date: today,
-    p_limit: DAILY_LIMIT,
+    p_limit: USAGE_LIMIT,
   })
 
+  // Compute fallback resets_at in case the RPC doesn't exist yet
+  const fallbackResetsAt = new Date(
+    Math.ceil(Date.now() / (WINDOW_SECONDS * 1000)) * WINDOW_SECONDS * 1000
+  ).toISOString()
+
   if (error) {
-    // If the RPC doesn't exist yet or fails, allow the request (fail open)
     console.error('[daily_usage] rpc failed:', error.message)
-    return { allowed: true, remaining: DAILY_LIMIT }
+    return { allowed: true, remaining: USAGE_LIMIT, resetsAt: fallbackResetsAt }
   }
 
-  return { allowed: data.allowed, remaining: data.remaining }
+  return { allowed: data.allowed, remaining: data.remaining, resetsAt: data.resets_at }
 }
 
 // ---------------------------------------------------------------------------
-// Admin check — verify JWT from Authorization header
+// Admin check — decode JWT and compare email to ADMIN_EMAIL secret.
+// supabase.functions.invoke() sends the user's JWT for any signed-in user,
+// so we can't just check "token !== anonKey" — that treats every logged-in
+// user as admin. Instead we decode the JWT payload and match the email claim.
 // ---------------------------------------------------------------------------
 function isAdmin(req: Request): boolean {
   const auth = req.headers.get('authorization')
-  // Supabase functions.invoke sends "Bearer <jwt>", raw fetch with just apikey does not.
-  // If there's a Bearer token that's not the anon key, it's an authenticated user (admin).
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
   if (!auth?.startsWith('Bearer ')) return false
   const token = auth.slice(7)
-  return token.length > 0 && token !== anonKey
+  const adminEmail = Deno.env.get('ADMIN_EMAIL') ?? ''
+  if (!adminEmail) return false
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.email === adminEmail
+  } catch {
+    return false
+  }
 }
 
 const FIELD_LIMITS: Record<string, number> = {
@@ -85,7 +101,7 @@ const FIELD_LIMITS: Record<string, number> = {
   'profile.experience': 1000,
   'profile.whyField': 500,
   'profile.goal': 200,
-  'profile.standout': 500,
+  'profile.standout': 600,
   'options.instructions': 500,
   'lab.name': 200,
   'lab.overview': 2000,
@@ -108,6 +124,7 @@ const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Expose-Headers': 'X-Daily-Remaining, X-Resets-At',
 }
 
 function buildPrompt({ lab, member, profile, options }: {
@@ -179,13 +196,7 @@ serve(async (req) => {
     })
   }
 
-  const openrouterKey = Deno.env.get('OPENROUTER_KEY')
-  if (!openrouterKey) {
-    return new Response(JSON.stringify({ error: 'OPENROUTER_KEY not configured' }), {
-      status: 500,
-      headers: { ...CORS, 'Content-Type': 'application/json' },
-    })
-  }
+  const admin = isAdmin(req)
 
   let payload: { lab?: any; member?: any; profile?: any; options?: any; stream?: boolean; mode?: string }
   try {
@@ -193,6 +204,59 @@ serve(async (req) => {
   } catch {
     return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
       status: 400,
+      headers: { ...CORS, 'Content-Type': 'application/json' },
+    })
+  }
+
+  // Check usage mode — returns current remaining without consuming a use
+  if (payload.mode === 'check-usage') {
+    const t0 = performance.now()
+    if (admin) {
+      console.log(`[check-usage] admin shortcut ${Math.round(performance.now() - t0)}ms`)
+      return new Response(JSON.stringify({ remaining: USAGE_LIMIT, limit: USAGE_LIMIT, resets_at: '' }), {
+        status: 200,
+        headers: { ...CORS, 'Content-Type': 'application/json' },
+      })
+    }
+    const db = getDb()
+    const windowStart = new Date(Math.floor(Date.now() / (WINDOW_SECONDS * 1000)) * WINDOW_SECONDS * 1000).toISOString()
+    const windowEnd = new Date(Math.ceil(Date.now() / (WINDOW_SECONDS * 1000)) * WINDOW_SECONDS * 1000).toISOString()
+
+    const { data, error } = await db
+      .from('daily_usage')
+      .select('count')
+      .eq('ip', ip)
+      .eq('window_start', windowStart)
+      .maybeSingle()
+
+    const count = error || !data ? 0 : data.count
+    const remaining = Math.max(0, USAGE_LIMIT - count)
+    console.log(`[check-usage] db query ${Math.round(performance.now() - t0)}ms, count=${count}`)
+    return new Response(JSON.stringify({ remaining, limit: USAGE_LIMIT, resets_at: windowEnd }), {
+      status: 200,
+      headers: { ...CORS, 'Content-Type': 'application/json' },
+    })
+  }
+
+  // Usage limit — skipped for admin (authenticated) users
+  let dailyRemaining = USAGE_LIMIT
+  let resetsAt = ''
+  if (!admin) {
+    const usage = await checkUsageLimit(ip)
+    dailyRemaining = usage.remaining
+    resetsAt = usage.resetsAt
+    if (!usage.allowed) {
+      return new Response(JSON.stringify({ error: 'Usage limit reached. Try again later!', remaining: 0, resets_at: resetsAt }), {
+        status: 429,
+        headers: { ...CORS, 'Content-Type': 'application/json', 'X-Daily-Remaining': '0', 'X-Resets-At': resetsAt },
+      })
+    }
+  }
+
+  const openrouterKey = Deno.env.get('OPENROUTER_KEY')
+  if (!openrouterKey) {
+    return new Response(JSON.stringify({ error: 'OPENROUTER_KEY not configured' }), {
+      status: 500,
       headers: { ...CORS, 'Content-Type': 'application/json' },
     })
   }
@@ -224,20 +288,26 @@ serve(async (req) => {
       })
     }
 
-    const reviewPrompt = `You are a brutally honest writing coach helping a student improve their cold email profile before they email a professor.
+    const reviewPrompt = `You are checking whether a student's cold email profile gives an AI enough concrete material to write a convincing email. Your job is NOT to make the profile perfect — only to catch fields that are so vague the AI has nothing to work with.
 
-Review the student's profile fields below. For each field that is vague, generic, or unhelpful, give ONE short, specific suggestion to improve it. If a field is already good, skip it.
+Only flag a field if it FAILS this test:
 
-Focus on:
-- Is "Research experience" specific enough? Does it name actual techniques, tools, projects, or results? Or is it vague filler like "interested in biology"?
-- Does "What got them into this field" tell a real story or is it generic?
-- Does "Standout detail" actually stand out?
-- If the student's background doesn't obviously connect to the lab's research area, point that out and suggest how they could frame what they DO bring (data skills, programming, analysis, etc.) honestly instead of faking a connection.
+- "Research experience": Fails if it has zero specifics — no tools, projects, techniques, or results. Just "I've done research" or "I'm interested in biology." PASSES if it names anything concrete.
+- "What got them into this field": Fails if it's completely generic with zero personal context ("I've always loved science"). PASSES if it includes any specific reason, interest, or experience.
+- "Standout detail": Fails if it's vague ("I'm a hard worker") or just repeats the experience field. PASSES if it names a specific project, skill, or result.
 
-${lab ? `The lab they're emailing studies: ${lab.overview}` : ''}
+Do NOT flag:
+- The "Goal" field — "undergrad volunteer", "rotation", "research position" are all valid. It's a position type, not a cover letter.
+- Fields that are good but could theoretically be more specific.
+- Whether the student's background matches the lab — the email generator handles that.
+- Anything where you're thinking "could be stronger" rather than "missing info."
+
+When in doubt, don't flag it.
+
+${lab ? `Lab context (for reference only): ${lab.overview}` : ''}
 
 Return your response as valid JSON: {"suggestions": [{"field": "experience", "issue": "...", "suggestion": "..."}, ...]}
-Only include fields that need improvement. If everything looks good, return {"suggestions": []}.`
+If nothing clearly fails the tests above, return {"suggestions": []}.`
 
     const reviewUserPrompt = `Student profile:
 - Name: ${profile.name}
@@ -280,9 +350,9 @@ Only include fields that need improvement. If everything looks good, return {"su
       const content = reviewData?.choices?.[0]?.message?.content
       const parsed = typeof content === 'string' ? JSON.parse(content) : content
 
-      return new Response(JSON.stringify(parsed), {
+      return new Response(JSON.stringify({ ...parsed, remaining: dailyRemaining, resets_at: resetsAt }), {
         status: 200,
-        headers: { ...CORS, 'Content-Type': 'application/json' },
+        headers: { ...CORS, 'Content-Type': 'application/json', 'X-Daily-Remaining': String(dailyRemaining), 'X-Resets-At': resetsAt },
       })
     } catch (e: any) {
       return new Response(JSON.stringify({ error: `Review failed: ${e.message}` }), {
@@ -368,6 +438,8 @@ Only include fields that need improvement. If everything looks good, return {"su
         ...CORS,
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
+        'X-Daily-Remaining': String(dailyRemaining),
+        'X-Resets-At': resetsAt,
       },
     })
   }
@@ -387,8 +459,8 @@ Only include fields that need improvement. If everything looks good, return {"su
     })
   }
 
-  return new Response(JSON.stringify({ subject: parsed.subject, body: parsed.body }), {
+  return new Response(JSON.stringify({ subject: parsed.subject, body: parsed.body, remaining: dailyRemaining, resets_at: resetsAt }), {
     status: 200,
-    headers: { ...CORS, 'Content-Type': 'application/json' },
+    headers: { ...CORS, 'Content-Type': 'application/json', 'X-Daily-Remaining': String(dailyRemaining), 'X-Resets-At': resetsAt },
   })
 })

@@ -1,6 +1,20 @@
 import { supabase } from '../lib/supabase'
 
 /**
+ * Check current usage without consuming a use. Returns { remaining, resetsAt }.
+ */
+export async function checkUsage() {
+  const t0 = performance.now()
+  const { data, error } = await supabase.functions.invoke('generate-email', {
+    body: { mode: 'check-usage' },
+  })
+  console.log(`[check-usage] ${Math.round(performance.now() - t0)}ms`)
+
+  if (error) return { remaining: null, limit: null, resetsAt: null }
+  return { remaining: data.remaining, limit: data.limit ?? null, resetsAt: data.resets_at || null }
+}
+
+/**
  * Review profile quality before generating. Returns { suggestions: [...] }.
  * Each suggestion has { field, issue, suggestion }.
  */
@@ -10,7 +24,8 @@ export async function reviewProfile({ profile, lab }) {
   })
 
   if (error) throw new Error(error.message || 'Failed to review profile')
-  return data
+  // data includes { suggestions: [...], remaining: number, resets_at: string }
+  return { ...data, resetsAt: data.resets_at }
 }
 
 /**
@@ -56,6 +71,10 @@ export async function generateEmailStream({ lab, member, profile, options, onSub
     throw new Error(err.error || 'Failed to generate email')
   }
 
+  // Read usage info from response headers
+  const remaining = parseInt(res.headers.get('X-Daily-Remaining') ?? '', 10)
+  const resetsAt = res.headers.get('X-Resets-At') || undefined
+
   const reader = res.body.getReader()
   const decoder = new TextDecoder()
   let raw = '' // full accumulated JSON string from the model
@@ -83,7 +102,7 @@ export async function generateEmailStream({ lab, member, profile, options, onSub
   try {
     const match = raw.match(/\{[\s\S]*\}/)
     const parsed = JSON.parse(match?.[0] ?? raw)
-    return { subject: parsed.subject, body: parsed.body }
+    return { subject: parsed.subject, body: parsed.body, remaining: isNaN(remaining) ? undefined : remaining, resetsAt }
   } catch {
     throw new Error('Failed to parse AI response')
   }
