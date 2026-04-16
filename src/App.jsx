@@ -1,4 +1,4 @@
-import { useEffect, useDeferredValue, useState } from 'react'
+import { lazy, Suspense, useEffect, useDeferredValue, useState } from 'react'
 import { AnimatePresence } from 'motion/react'
 import { useAppState } from './hooks/useAppState'
 import { useAuth } from './hooks/useAuth'
@@ -7,8 +7,9 @@ import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import LabBrowser from './components/LabBrowser'
 import CheckoutSidebar from './components/CheckoutSidebar'
-import EmailModal from './components/EmailModal'
-import ProfileModal from './components/ProfileModal'
+
+const EmailModal = lazy(() => import('./components/EmailModal'))
+const ProfileModal = lazy(() => import('./components/ProfileModal'))
 
 function useDevMode() {
   const [devMode] = useState(() => {
@@ -59,7 +60,7 @@ export default function App() {
   const showCheckout = selectedMembers.length > 0
   const rightOffset = showCheckout ? (isCheckoutOpen ? '18.2rem' : '3.7rem') : '0'
 
-  if (loading) return null
+  if (loading || !data) return null
 
   return (
     <div className="relative min-h-screen grid-bg">
@@ -106,26 +107,28 @@ export default function App() {
           />
         )}
       </AnimatePresence>
-      <EmailModal
-        modal={emailModal}
-        onClose={closeEmailModal}
-        onNavigate={navigateModal}
-        session={devMode ? session : null}
-        getAccessToken={devMode ? getAccessToken : null}
-        emailResults={emailResults}
-        setEmailResults={setEmailResults}
-        onOpenProfile={() => setProfileOpen(true)}
-      />
-      <AnimatePresence>
-        {profileOpen && (
-          <ProfileModal
-            key="profile"
-            open={profileOpen}
-            onClose={() => setProfileOpen(false)}
-            onSave={() => setProfileOpen(false)}
-          />
-        )}
-      </AnimatePresence>
+      <Suspense fallback={null}>
+        <EmailModal
+          modal={emailModal}
+          onClose={closeEmailModal}
+          onNavigate={navigateModal}
+          session={devMode ? session : null}
+          getAccessToken={devMode ? getAccessToken : null}
+          emailResults={emailResults}
+          setEmailResults={setEmailResults}
+          onOpenProfile={() => setProfileOpen(true)}
+        />
+        <AnimatePresence>
+          {profileOpen && (
+            <ProfileModal
+              key="profile"
+              open={profileOpen}
+              onClose={() => setProfileOpen(false)}
+              onSave={() => setProfileOpen(false)}
+            />
+          )}
+        </AnimatePresence>
+      </Suspense>
     </div>
   )
 }

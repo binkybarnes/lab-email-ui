@@ -1,13 +1,9 @@
-import { useState, useCallback, useMemo } from 'react'
-import data from '../data/labs.json'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { toggleSetItem, areAllSelected } from '../utils/selection'
 
-const allLabsStatic = data.departments.flatMap(d =>
-  d.labs.map(l => ({ ...l, departmentId: d.id, departmentName: d.name }))
-)
-
 export function useAppState() {
-  const [visibleLabIds, setVisibleLabIds] = useState(new Set(allLabsStatic.map(l => l.id)))
+  const [data, setData] = useState(null)
+  const [visibleLabIds, setVisibleLabIds] = useState(new Set())
   const [selectedMemberIds, setSelectedMemberIds] = useState(new Set())
   const [roleFilter, setRoleFilter] = useState('all')
   const [emailModal, setEmailModal] = useState({
@@ -17,7 +13,22 @@ export function useAppState() {
     drafts: {},
   })
 
-  const allLabs = useMemo(() => allLabsStatic, [])
+  useEffect(() => {
+    fetch('/labs.json')
+      .then(r => r.json())
+      .then(d => {
+        setData(d)
+        const allIds = d.departments.flatMap(dept => dept.labs.map(l => l.id))
+        setVisibleLabIds(new Set(allIds))
+      })
+  }, [])
+
+  const allLabs = useMemo(() => {
+    if (!data) return []
+    return data.departments.flatMap(d =>
+      d.labs.map(l => ({ ...l, departmentId: d.id, departmentName: d.name }))
+    )
+  }, [data])
 
   const allMembers = useMemo(() => allLabs.flatMap(l => 
     l.members.map(m => ({ ...m, labName: l.name, labId: l.id, labOverview: l.overview ?? '' }))
