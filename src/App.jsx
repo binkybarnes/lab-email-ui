@@ -7,6 +7,7 @@ import Sidebar from './components/Sidebar'
 import LabBrowser from './components/LabBrowser'
 import CheckoutSidebar from './components/CheckoutSidebar'
 import EmailModal from './components/EmailModal'
+import ProfileModal from './components/ProfileModal'
 
 const KONAMI = 'admin'
 
@@ -63,6 +64,7 @@ export default function App() {
   const deferredVisibleLabs = useDeferredValue(visibleLabs)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(true)
   const [emailResults, setEmailResults] = useState({}) // memberId -> { ok, error, composed }
+  const [profileOpen, setProfileOpen] = useState(false)
   const showCheckout = selectedMembers.length > 0
   const rightOffset = showCheckout ? (isCheckoutOpen ? '18.2rem' : '3.7rem') : '0'
 
@@ -77,6 +79,7 @@ export default function App() {
         onSignOut={adminMode && session ? signOut : null}
         adminMode={adminMode}
         onSignIn={adminMode && !session ? signIn : null}
+        onProfile={() => setProfileOpen(true)}
       />
       <Sidebar
         data={data}
@@ -120,7 +123,18 @@ export default function App() {
         getAccessToken={adminMode ? getAccessToken : null}
         emailResults={emailResults}
         setEmailResults={setEmailResults}
+        onOpenProfile={() => setProfileOpen(true)}
       />
+      <AnimatePresence>
+        {profileOpen && (
+          <ProfileModal
+            key="profile"
+            open={profileOpen}
+            onClose={() => setProfileOpen(false)}
+            onSave={() => setProfileOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

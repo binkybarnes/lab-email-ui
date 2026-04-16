@@ -1,4 +1,4 @@
-export default function Navbar({ selectedCount = 0, rightOffset = '0', user = null, onSignOut, adminMode = false, onSignIn }) {
+export default function Navbar({ selectedCount = 0, rightOffset = '0', user = null, onSignOut, adminMode = false, onSignIn, onProfile }) {
   return (
     <header
       className="fixed top-0 left-0 z-50 flex items-center justify-between px-6 h-14 transition-all duration-300"
@@ -16,6 +16,18 @@ export default function Navbar({ selectedCount = 0, rightOffset = '0', user = nu
       </div>
 
       <div className="flex items-center gap-3">
+        {onProfile && (
+          <button
+            onClick={onProfile}
+            className="text-xs px-2.5 py-1 transition-colors"
+            style={{ border: '1px solid #363b47', borderRadius: '3px', background: 'transparent', color: '#64748b' }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#272b34'; e.currentTarget.style.color = '#e4e7ed' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#64748b' }}
+            title="Edit your AI profile"
+          >
+            ✦ profile
+          </button>
+        )}
         {selectedCount > 0 && (
           <div
             role="status"

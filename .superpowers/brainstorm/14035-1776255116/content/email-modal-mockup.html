@@ -1,0 +1,103 @@
+<h2>EmailModal — AI Write bottom drawer</h2>
+<p class="subtitle">Mockup of the expanded modal. The AI drawer slides in below the editor when you click "AI Write".</p>
+
+<div class="mockup">
+  <div class="mockup-header">EmailModal — composing to Dr. Sarah Chen · Dixon Lab</div>
+  <div class="mockup-body" style="padding:0;background:#0f172a">
+
+    <!-- Modal chrome -->
+    <div style="background:#0f172a;border-radius:8px;overflow:hidden;font-size:0.78rem;max-width:640px;margin:0 auto;border:1px solid #1e293b">
+
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #1e293b">
+        <span style="color:#e2e8f0;font-weight:600">Compose Email</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="color:#64748b;font-size:0.7rem">1 of 3 recipients</span>
+          <div style="width:20px;height:20px;background:#1e293b;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:0.7rem">✕</div>
+        </div>
+      </div>
+
+      <!-- To field -->
+      <div style="padding:10px 16px;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:8px">
+        <span style="color:#64748b;font-size:0.7rem;width:44px">To</span>
+        <span style="color:#94a3b8;font-size:0.75rem">s.chen@ucsd.edu</span>
+      </div>
+
+      <!-- Subject field -->
+      <div style="padding:10px 16px;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:8px">
+        <span style="color:#64748b;font-size:0.7rem;width:44px">Subject</span>
+        <span style="color:#e2e8f0;font-size:0.75rem">Inquiry about rotation opportunities — John Park</span>
+      </div>
+
+      <!-- Body -->
+      <div style="padding:12px 16px;min-height:120px;border-bottom:1px solid #1e293b">
+        <div style="color:#cbd5e1;font-size:0.75rem;line-height:1.6">
+          Dear Dr. Chen,<br><br>
+          I came across your lab's work on protein phosphatases and their role in cancer signaling — particularly the connection to neuronal development — and I found it compelling given my own background in biochemistry...<br><br>
+          <span style="color:#475569">[rest of generated email]</span>
+        </div>
+      </div>
+
+      <!-- AI WRITE DRAWER -->
+      <div style="background:#0a0f1a;border-top:2px solid #3b82f6">
+
+        <!-- Drawer header -->
+        <div style="padding:10px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="color:#3b82f6;font-size:0.7rem">✦</span>
+            <span style="color:#3b82f6;font-size:0.75rem;font-weight:600">AI Write</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="color:#475569;font-size:0.62rem">🔒 stays on your device</span>
+          </div>
+        </div>
+
+        <!-- Tone row -->
+        <div style="padding:0 16px 8px">
+          <div style="color:#64748b;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px">Tone</div>
+          <div style="display:flex;gap:5px">
+            <span style="background:#1e3a5f;color:#93c5fd;padding:3px 10px;border-radius:999px;font-size:0.7rem;border:1px solid #3b82f6">Formal</span>
+            <span style="background:#1e293b;color:#64748b;padding:3px 10px;border-radius:999px;font-size:0.7rem;border:1px solid #334155">Casual</span>
+            <span style="background:#1e293b;color:#64748b;padding:3px 10px;border-radius:999px;font-size:0.7rem;border:1px solid #334155">Enthusiastic</span>
+          </div>
+        </div>
+
+        <!-- Length row -->
+        <div style="padding:0 16px 10px">
+          <div style="color:#64748b;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px">Length</div>
+          <div style="display:flex;gap:5px">
+            <span style="background:#1e293b;color:#64748b;padding:3px 10px;border-radius:999px;font-size:0.7rem;border:1px solid #334155">Short</span>
+            <span style="background:#312e81;color:#a5b4fc;padding:3px 10px;border-radius:999px;font-size:0.7rem;border:1px solid #6366f1">Medium</span>
+            <span style="background:#1e293b;color:#64748b;padding:3px 10px;border-radius:999px;font-size:0.7rem;border:1px solid #334155">Long</span>
+          </div>
+        </div>
+
+        <!-- Instructions box -->
+        <div style="padding:0 16px 10px">
+          <div style="color:#64748b;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px">Extra instructions <span style="font-size:0.6rem;color:#475569;text-transform:none;letter-spacing:0">(optional)</span></div>
+          <div style="background:#0f172a;border:1px solid #334155;border-radius:5px;padding:7px 10px;color:#475569;font-size:0.72rem;font-style:italic;min-height:28px">mention my western blot experience...</div>
+        </div>
+
+        <!-- Generate button row -->
+        <div style="padding:0 16px 12px;display:flex;justify-content:space-between;align-items:center">
+          <button style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:7px 18px;font-size:0.75rem;font-weight:600;cursor:pointer">✦ Generate</button>
+          <span style="color:#334155;font-size:0.7rem">Regenerate anytime to get a new version</span>
+        </div>
+
+      </div>
+
+      <!-- Send / nav row -->
+      <div style="padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #1e293b">
+        <button style="background:#22c55e;color:#fff;border:none;border-radius:6px;padding:7px 18px;font-size:0.75rem;font-weight:600">Send via Gmail</button>
+        <div style="display:flex;gap:8px">
+          <div style="width:28px;height:28px;background:#1e293b;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:0.75rem">←</div>
+          <div style="width:28px;height:28px;background:#1e293b;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:0.75rem">→</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:1.5rem">Does this layout feel right? Let me know in the terminal.</p>

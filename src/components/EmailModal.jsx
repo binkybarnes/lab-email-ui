@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { sendEmail } from '../utils/gmailApi'
 import { supabase } from '../lib/supabase'
+import { getProfile } from '../utils/profile'
+import { generateEmail } from '../utils/openrouter'
 
 const INPUT_STYLE = {
   background: '#22262e',
@@ -11,7 +13,7 @@ const INPUT_STYLE = {
   outline: 'none',
   transition: 'border-color 0.15s',
   fontFamily: '"IBM Plex Sans", sans-serif',
-  fontSize: 13,
+  fontSize: 15,
   width: '100%',
   padding: '7px 10px',
 }
@@ -123,18 +125,160 @@ function DisclaimerPopup({ onAccept, onCancel }) {
   )
 }
 
-export default function EmailModal({ modal, onClose, onNavigate, session, getAccessToken, emailResults, setEmailResults }) {
+const TONES = ['Formal', 'Casual', 'Enthusiastic']
+const LENGTHS = ['Short', 'Medium', 'Long']
+
+function Chip({ label, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="text-xs px-2.5 py-0.5 transition-all"
+      style={{
+        borderRadius: '999px',
+        border: `1px solid ${active ? '#4d6dff' : '#363b47'}`,
+        background: active ? 'rgba(77,109,255,0.15)' : 'transparent',
+        color: active ? '#7b9fff' : '#64748b',
+        cursor: 'pointer',
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
+function AiDrawer({ member, onGenerate, onNeedProfile }) {
+  const [tone, setTone] = useState('Formal')
+  const [length, setLength] = useState('Medium')
+  const [instructions, setInstructions] = useState('')
+  const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState(null)
+
+  async function handleGenerate() {
+    const profile = getProfile()
+    if (!profile) {
+      onNeedProfile()
+      return
+    }
+    setGenerating(true)
+    setError(null)
+    try {
+      const result = await onGenerate({
+        profile,
+        options: { tone, length, instructions: instructions.trim() || undefined },
+      })
+      if (result?.error) setError(result.error)
+    } catch (e) {
+      setError(e.message || 'Something went wrong')
+    }
+    setGenerating(false)
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+      style={{ overflow: 'hidden', borderTop: '2px solid #4d6dff' }}
+    >
+      <div className="px-5 py-3 flex flex-col gap-3" style={{ background: 'rgba(77,109,255,0.04)' }}>
+        {/* Drawer header row */}
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium" style={{ color: '#4d6dff' }}>✦ AI Write</span>
+          <span className="text-xs" style={{ color: '#334155' }}>🔒 stays on your device</span>
+        </div>
+
+        {/* Tone + Length rows */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs w-12 flex-shrink-0" style={{ color: '#475569' }}>Tone</span>
+            <div className="flex gap-1.5 flex-wrap">
+              {TONES.map(t => (
+                <Chip key={t} label={t} active={tone === t} onClick={() => setTone(t)} />
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs w-12 flex-shrink-0" style={{ color: '#475569' }}>Length</span>
+            <div className="flex gap-1.5 flex-wrap">
+              {LENGTHS.map(l => (
+                <Chip key={l} label={l} active={length === l} onClick={() => setLength(l)} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Instructions */}
+        <div>
+          <textarea
+            value={instructions}
+            onChange={e => setInstructions(e.target.value)}
+            placeholder="Extra instructions (optional) — e.g. mention my Python skills, keep it under 100 words..."
+            rows={2}
+            style={{
+              ...INPUT_STYLE,
+              fontSize: 12,
+              resize: 'none',
+              color: '#94a3b8',
+            }}
+            onFocus={e => e.target.style.borderColor = '#4d6dff'}
+            onBlur={e => e.target.style.borderColor = '#363b47'}
+          />
+        </div>
+
+        {/* Generate row */}
+        <div className="flex items-center justify-between gap-3">
+          <button
+            onClick={handleGenerate}
+            disabled={generating}
+            className="text-xs px-4 py-1.5 text-white transition-all disabled:opacity-60 flex items-center gap-1.5"
+            style={{ background: '#4d6dff', borderRadius: '3px' }}
+            onMouseEnter={e => !generating && (e.currentTarget.style.background = '#3d5df0')}
+            onMouseLeave={e => e.currentTarget.style.background = '#4d6dff'}
+          >
+            {generating ? (
+              <>
+                <span
+                  className="animate-spin"
+                  style={{
+                    display: 'inline-block',
+                    width: 10,
+                    height: 10,
+                    border: '1.5px solid rgba(255,255,255,0.3)',
+                    borderTopColor: '#fff',
+                    borderRadius: '50%',
+                  }}
+                />
+                Generating...
+              </>
+            ) : (
+              <>✦ Generate</>
+            )}
+          </button>
+          {!error && (
+            <span className="text-xs" style={{ color: '#334155' }}>Regenerate anytime for a new version</span>
+          )}
+          {error && (
+            <span className="text-xs" style={{ color: '#f87171' }}>{error}</span>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+export default function EmailModal({ modal, onClose, onNavigate, session, getAccessToken, emailResults, setEmailResults, onOpenProfile }) {
   const { open, members, currentIndex } = modal
   const [drafts, setDrafts] = useState({})
   const [sending, setSending] = useState(false)
   const results = emailResults
   const setResults = setEmailResults
   const [showDisclaimer, setShowDisclaimer] = useState(false)
+  const [showAiDrawer, setShowAiDrawer] = useState(false)
   const prevMembersRef = useRef(null)
 
   const isAdmin = !!session
 
-  // Re-initialize drafts only when the member list changes (new modal open)
   useEffect(() => {
     if (!open) return
     if (prevMembersRef.current !== members) {
@@ -169,7 +313,6 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
   const isMulti = members.length > 1
   const currentResult = results[member.id]
 
-  // --- Disclaimer gate ---
   function requireDisclaimer() {
     const accepted = localStorage.getItem('disclaimer_accepted')
     if (accepted) {
@@ -185,7 +328,6 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
     executeSend()
   }
 
-  // --- Send logic (branches on admin vs normal) ---
   function executeSend() {
     if (isAdmin) {
       doApiSend()
@@ -194,7 +336,6 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
     }
   }
 
-  // Admin: direct Gmail API send
   async function doApiSend() {
     setSending(true)
     try {
@@ -208,7 +349,6 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
     autoAdvance()
   }
 
-  // Normal user: open Gmail compose tab
   function doComposeSend() {
     const to = member.email || draft.toOverride
     openGmailCompose({ to, subject: draft.subject, body: draft.body })
@@ -216,7 +356,6 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
     autoAdvance()
   }
 
-  // Auto-advance to next unsent member
   function autoAdvance() {
     if (!isMulti) return
     for (let i = currentIndex + 1; i < members.length; i++) {
@@ -233,8 +372,32 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
     }
   }
 
-  const sentCount = Object.values(results).filter(r => r.ok).length
+  function handleAiWrite() {
+    const profile = getProfile()
+    if (!profile) {
+      onOpenProfile()
+      return
+    }
+    setShowAiDrawer(prev => !prev)
+  }
 
+  async function handleGenerate({ profile, options }) {
+    try {
+      const { subject, body } = await generateEmail({
+        lab: { name: member.labName ?? '', overview: member.labOverview ?? '' },
+        member: { name: member.name, role: member.role ?? '' },
+        profile,
+        options,
+      })
+      updateDraft(member.id, 'subject', subject)
+      updateDraft(member.id, 'body', body)
+      return {}
+    } catch (e) {
+      return { error: e.message || 'Generation failed' }
+    }
+  }
+
+  const sentCount = Object.values(results).filter(r => r.ok).length
 
   return (
     <div
@@ -243,13 +406,14 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
-        className="w-full max-w-xl flex flex-col overflow-hidden"
+        className="w-full flex flex-col overflow-hidden"
         style={{
           background: '#1e2128',
           border: '1px solid #363b47',
           borderRadius: '5px',
           boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-          maxHeight: '88vh',
+          maxHeight: '90vh',
+          maxWidth: '800px',
         }}
       >
         {/* Header */}
@@ -308,7 +472,6 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
 
         {/* Form */}
         <div className="flex flex-col gap-3 px-5 py-4 overflow-y-auto flex-1">
-          {/* Error banner */}
           {currentResult && !currentResult.ok && (
             <div
               className="text-xs px-3 py-2"
@@ -375,12 +538,23 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
               onChange={e => updateDraft(member.id, 'body', e.target.value)}
               placeholder="Write your email..."
               rows={10}
-              style={{ ...INPUT_STYLE, resize: 'none', fontSize: 12 }}
+              style={{ ...INPUT_STYLE, resize: 'none' }}
               onFocus={e => e.target.style.borderColor = '#4d6dff'}
               onBlur={e => e.target.style.borderColor = '#363b47'}
             />
           </div>
         </div>
+
+        {/* AI Drawer */}
+        <AnimatePresence>
+          {showAiDrawer && (
+            <AiDrawer
+              member={member}
+              onGenerate={handleGenerate}
+              onNeedProfile={onOpenProfile}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Footer */}
         <div
@@ -389,12 +563,18 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
         >
           <div className="flex items-center gap-3">
             <button
-              disabled
-              title="Coming soon"
-              className="text-xs px-3 py-1 text-muted cursor-not-allowed opacity-40"
-              style={{ border: '1px solid #363b47', background: 'transparent', borderRadius: '3px' }}
+              onClick={handleAiWrite}
+              className="text-xs px-3 py-1 transition-all"
+              style={{
+                border: `1px solid ${showAiDrawer ? '#4d6dff' : '#363b47'}`,
+                background: showAiDrawer ? 'rgba(77,109,255,0.1)' : 'transparent',
+                color: showAiDrawer ? '#7b9fff' : '#64748b',
+                borderRadius: '3px',
+              }}
+              onMouseEnter={e => { if (!showAiDrawer) { e.currentTarget.style.borderColor = '#4d6dff'; e.currentTarget.style.color = '#7b9fff' } }}
+              onMouseLeave={e => { if (!showAiDrawer) { e.currentTarget.style.borderColor = '#363b47'; e.currentTarget.style.color = '#64748b' } }}
             >
-              ✦ AI Writer
+              ✦ AI Write
             </button>
             {isMulti && sentCount > 0 && (
               <span className="text-xs" style={{ color: '#4ade80' }}>
