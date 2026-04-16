@@ -38,7 +38,7 @@ async def run() -> None:
     from verify import confirm
 
     print("Stage 1: Loading faculty from CSV...")
-    faculty = load_faculty_from_csv(PROFILES_CSV)[30:35]
+    faculty = load_faculty_from_csv(PROFILES_CSV)[:100]
 
     print_verify_summary(faculty)
 

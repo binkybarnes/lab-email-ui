@@ -1,0 +1,16 @@
+[
+  {
+    "name": "Lucila Ohno-machado",
+    "department": "Medicine",
+    "profile_url": "https://researcherprofiles.org/profile/193828",
+    "lab_url": "https://sitapati.org/",
+    "lab_url_uncertain_reason": "lucila isnt on this"
+  },
+   {
+    "name": "Joachim Ix",
+    "department": "Medicine",
+    "profile_url": "https://researcherprofiles.org/profile/192873",
+    "lab_url": "https://nephrology.ucsd.edu/research/clinical/joachim-ix.html",
+    "lab_url_uncertain_reason": "its not a lab website"
+  }
+]
