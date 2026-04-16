@@ -31,7 +31,7 @@ Rules:
 - Do not include visiting researchers
 """
 
-MODEL = "openrouter/elephant-alpha"
+MODEL = "meta-llama/llama-3.1-8b-instruct"
 
 
 MEMBER_KEYWORDS = ["member", "people", "team", "group", "phd", "postdoc", "graduate",

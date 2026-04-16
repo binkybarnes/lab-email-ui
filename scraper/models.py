@@ -10,6 +10,7 @@ class FacultyWithURL(TypedDict):
     department: str
     profile_url: str
     lab_url: Optional[str]   # None if not found
+    lab_url_uncertain_reason: Optional[str]  # None = certain, string = uncertain with reason
 
 class RawMember(TypedDict, total=False):
     name: str

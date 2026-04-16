@@ -12,6 +12,10 @@ RAW_LAB = {
     ],
 }
 
+FACULTY_DATA = [
+    {"name": "Jane Smith", "department": "CSE"},
+]
+
 def test_make_slug():
     assert make_slug("AI Systems Lab") == "ai-systems-lab"
 
@@ -34,11 +38,12 @@ def test_build_lab_shape():
     assert len(lab["members"]) == 2
 
 def test_build_output_wraps_in_departments():
-    output = build_output([RAW_LAB])
+    output = build_output([RAW_LAB], FACULTY_DATA)
     assert output["departments"][0]["id"] == "cse"
     assert len(output["departments"][0]["labs"]) == 1
 
 def test_build_output_skips_labs_with_no_name():
     no_name = {**RAW_LAB, "lab_name": ""}
-    output = build_output([no_name])
-    assert len(output["departments"][0]["labs"]) == 0
+    output = build_output([no_name], FACULTY_DATA)
+    # All labs skipped → no departments emitted at all
+    assert len(output["departments"]) == 0

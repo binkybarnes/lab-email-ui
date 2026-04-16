@@ -40,9 +40,12 @@ JUNK_LINES = frozenset({"Open Menu Close Menu", "\u00ad"})
 
 
 def _is_nav_link_line(line: str) -> bool:
-    """Check if a line is a standalone navigation link (not an image)."""
+    """Check if a line is a standalone navigation link (not an image or mailto)."""
     s = line.strip()
     if not s:
+        return False
+    # Never treat mailto links as nav links — they carry email data we need.
+    if "mailto:" in s.lower():
         return False
     s = re.sub(r"^[\*\-\+]\s+", "", s)
     s = re.sub(r"^\d+\.\s+", "", s)
@@ -350,6 +353,15 @@ async def run() -> None:
             p.style.display = 'block';
             p.style.opacity = '1';
             p.style.visibility = 'visible';
+        });
+        // Ensure mailto links have visible text so they survive markdown conversion.
+        // Many lab sites use icon-only mailto anchors (empty text) which crawl4ai drops.
+        document.querySelectorAll('a[href^="mailto:"]').forEach(a => {
+            const email = a.getAttribute('href').replace(/^mailto:/i, '').split('?')[0].trim();
+            if (!email) return;
+            if (!a.textContent.trim()) {
+                a.textContent = email;
+            }
         });
     })();
     """
