@@ -15,18 +15,19 @@ const INPUT_STYLE = {
 }
 
 const FIELDS = [
-  { key: 'name', label: 'Your name', placeholder: 'e.g. Alex Kim', type: 'input' },
+  { key: 'name', label: 'Your full name', placeholder: 'e.g. Alex Kim', type: 'input' },
   { key: 'status', label: 'Academic status', placeholder: 'e.g. 3rd year undergrad, incoming PhD student, postdoc', type: 'input' },
-  { key: 'institution', label: 'Current institution / department', placeholder: 'e.g. UC San Diego, Biochemistry', type: 'input' },
-  { key: 'background', label: 'Research background & interests', placeholder: 'Brief summary of what you\'ve worked on or find interesting...', type: 'textarea', rows: 3 },
-  { key: 'goal', label: "What you're looking for", placeholder: 'e.g. rotation, PhD position, undergrad volunteer, postdoc', type: 'input' },
-  { key: 'hook', label: 'Personal hook (optional)', placeholder: 'Something specific that makes you memorable — a technique, project, or finding you\'re proud of...', type: 'textarea', rows: 2 },
+  { key: 'institution', label: 'Institution / department', placeholder: 'e.g. UC San Diego, Biochemistry', type: 'input' },
+  { key: 'experience', label: 'Research experience', placeholder: 'What have you actually worked on? Mention techniques, tools, projects. e.g. "Spent a quarter doing calcium imaging analysis in Python"', type: 'textarea', rows: 3 },
+  { key: 'whyField', label: 'What got you into this field?', placeholder: '1-2 sentences — a class, paper, or experience that sparked your interest', type: 'textarea', rows: 2 },
+  { key: 'goal', label: "What you're looking for", placeholder: 'e.g. rotation, PhD position, undergrad research position, postdoc', type: 'input' },
+  { key: 'standout', label: 'Something that makes you stand out (optional)', placeholder: 'A specific skill, result, or project. e.g. "Built a pipeline to automate microscopy image segmentation"', type: 'textarea', rows: 2 },
 ]
 
 export default function ProfileModal({ open, onClose, onSave }) {
   const [form, setForm] = useState(() => {
     const saved = getProfile()
-    return saved ?? { name: '', status: '', institution: '', background: '', goal: '', hook: '' }
+    return saved ?? { name: '', status: '', institution: '', experience: '', whyField: '', goal: '', standout: '' }
   })
   const [focusedKey, setFocusedKey] = useState(null)
 
@@ -38,7 +39,7 @@ export default function ProfileModal({ open, onClose, onSave }) {
     onClose()
   }
 
-  const canSave = form.name.trim() && form.status.trim() && form.institution.trim() && form.background.trim() && form.goal.trim()
+  const canSave = form.name.trim() && form.status.trim() && form.institution.trim() && form.experience.trim() && form.whyField.trim() && form.goal.trim()
 
   return (
     <div

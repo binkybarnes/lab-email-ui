@@ -25,14 +25,12 @@ const validPayload = {
     name: 'Alex Chen',
     status: 'Undergraduate senior',
     institution: 'UC Berkeley',
-    background: 'CS major with ML and bioinformatics coursework.',
+    experience: 'CS major with ML and bioinformatics coursework. Built a scRNA-seq batch correction pipeline in Python.',
+    whyField: 'Took a computational biology class and got hooked on how ML can extract signal from noisy sequencing data.',
     goal: 'Summer research internship',
-    hook: 'Read your 2024 Nature Methods paper on scRNA-seq batch correction.',
+    standout: 'Read your 2024 Nature Methods paper on scRNA-seq batch correction.',
   },
-  options: {
-    tone: 'Formal',
-    length: 'Medium',
-  },
+  options: {},
 }
 
 describe('generateEmail', () => {
@@ -108,7 +106,7 @@ describe('generateEmail', () => {
   it('passes all payload fields to the edge function', async () => {
     const customPayload = {
       ...validPayload,
-      options: { tone: 'Casual', length: 'Short', instructions: 'Mention campus visit' },
+      options: { instructions: 'Mention campus visit' },
     }
 
     supabase.functions.invoke.mockResolvedValue({

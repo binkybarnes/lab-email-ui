@@ -35,35 +35,32 @@ const CORS = {
 function buildPrompt({ lab, member, profile, options }: {
   lab: { name: string; overview: string }
   member: { name: string; role: string }
-  profile: { name: string; status: string; institution: string; background: string; goal: string; hook?: string }
-  options: { tone: string; length: string; instructions?: string }
+  profile: { name: string; status: string; institution: string; experience: string; whyField: string; goal: string; standout?: string }
+  options: { instructions?: string }
 }) {
-  const lengthGuide: Record<string, string> = {
-    Short: '~75 words total',
-    Medium: '~150 words total',
-    Long: '~250 words total',
-  }
+  const systemPrompt = `You are ghostwriting a cold email from a real student to a professor or lab member. The email must read like a human student typed it on their laptop in 10 minutes — not like a language model produced it.
 
-  const toneGuide: Record<string, string> = {
-    Formal: 'professional but not stiff — clear and direct, no slang',
-    Casual: 'conversational, shorter sentences, natural phrasing',
-    Enthusiastic: 'genuine interest and energy, still grounded — not cringe or over-the-top',
-  }
+STRUCTURE — follow this order exactly:
+1. First sentence: State who you are (name, year, institution) and what you want. Be direct. Example: "I'm Alex, a third-year biochem major at UCSD, and I'm looking for a research position in your lab."
+2. Second paragraph (2-3 sentences): Why YOU. What got you into this field? What have you worked on that's relevant? Be specific — name a technique, a class project, a result, a question that keeps you up at night. This is the core of the email.
+3. Third paragraph (1-2 sentences): Why THIS LAB specifically. Connect your interests to their research using the lab overview provided. Do NOT just restate their research back to them — explain why it matters to you or how it connects to what you've done.
+4. One closing sentence: Something like "Would it be possible to chat about opportunities in your lab?" or "I'd love to learn more about whether there might be a fit." Keep it simple.
+5. Sign off: First name only on its own line. No "Best", no "Sincerely", no "Regards".
 
-  const systemPrompt = `You are writing a cold email from a student or researcher to a PI or lab member.
+HARD RULES:
+- NEVER use any of these words or phrases: "I hope this email finds you well", "I wanted to reach out", "I am excited to", "I am writing to express", "delve", "delving", "leverage", "keen", "keen interest", "passionate about", "touch base", "Best regards", "Warm regards", "Sincerely", "I look forward to hearing from you", "synergy", "innovative", "groundbreaking", "cutting-edge", "pioneering", "impactful", "captivated", "fascinated by your work", "deeply interested", "thrilled", "esteemed", "renowned", "prestigious", "humbly", "I would be honored", "invaluable opportunity", "unique opportunity", "enrich my understanding", "broaden my horizons", "align with my goals", "resonate with me", "I am confident that", "I believe I would be a great fit", "multifaceted", "holistic", "spearhead", "utilize"
+- NEVER open with flattery about the professor or their lab
+- NEVER use filler sentences that say nothing (e.g. "I've always been interested in science")
+- NEVER volunteer information the student didn't provide — do not invent skills, courses, or experiences
+- NEVER use exclamation marks more than once in the entire email
+- Keep total length between 75-120 words. This is strict. Professors do not read long emails from strangers.
+- Use plain, direct language. Short sentences. No compound-complex sentences.
+- The email should sound like it was written by a specific human, not a template filled in with variables.
 
-RULES — follow exactly:
-- Do NOT use any of these phrases: "I wanted to reach out", "I hope this email finds you well", "I am excited to", "I am writing to", "delve", "leverage", "passionate about", "keen", "touch base", "Best regards", "Warm regards", "I look forward to hearing from you", "synergy", "innovative"
-- Do NOT open with a filler or pleasantry sentence
-- Do NOT include generic praise like "Your lab does impressive work" or "I have long admired your research"
-- Open with ONE specific sentence that connects the sender's background to the lab's actual research (use the lab overview provided)
-- State the ask clearly within the first two sentences
-- Include the personal hook if provided — it should feel natural, not forced
-- Sign off with ONLY the sender's first name on its own line — nothing else (no "Best", no "Sincerely")
-- Subject line: plain and specific, e.g. "Rotation inquiry — Alex Kim" or "PhD position inquiry — Alex Kim"
+TONE: Write like a confident but respectful student. Not groveling, not arrogant. Think: "I'm genuinely interested and I have relevant experience" energy.
 
-Tone: ${options.tone} — ${toneGuide[options.tone] ?? 'professional and direct'}
-Length: ${lengthGuide[options.length] ?? '~150 words total'}
+Subject line: Plain and specific. Format: "[Goal] inquiry — [Sender first and last name]"
+Examples: "Research position inquiry — Alex Kim", "Rotation inquiry — Jordan Lee"
 
 Return your response as valid JSON in exactly this format:
 {"subject": "...", "body": "..."}`
@@ -79,8 +76,9 @@ About the sender:
 - Name: ${profile.name}
 - Academic status: ${profile.status}
 - Institution: ${profile.institution}
-- Research background: ${profile.background}
-- Looking for: ${profile.goal}${profile.hook ? `\n- Personal hook: ${profile.hook}` : ''}
+- Research experience: ${profile.experience}
+- What got them into this field: ${profile.whyField}
+- Looking for: ${profile.goal}${profile.standout ? `\n- Standout detail: ${profile.standout}` : ''}
 ${options.instructions ? `\nAdditional instructions: ${options.instructions}` : ''}`
 
   return { systemPrompt, userPrompt }

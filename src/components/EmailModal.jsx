@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { sendEmail } from '../utils/gmailApi'
 import { supabase } from '../lib/supabase'
 import { getProfile } from '../utils/profile'
-import { generateEmail } from '../utils/openrouter'
+import { generateEmailStream } from '../utils/openrouter'
 
 const INPUT_STYLE = {
   background: '#22262e',
@@ -125,30 +125,7 @@ function DisclaimerPopup({ onAccept, onCancel }) {
   )
 }
 
-const TONES = ['Formal', 'Casual', 'Enthusiastic']
-const LENGTHS = ['Short', 'Medium', 'Long']
-
-function Chip({ label, active, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="text-xs px-2.5 py-0.5 transition-all"
-      style={{
-        borderRadius: '999px',
-        border: `1px solid ${active ? '#4d6dff' : '#363b47'}`,
-        background: active ? 'rgba(77,109,255,0.15)' : 'transparent',
-        color: active ? '#7b9fff' : '#64748b',
-        cursor: 'pointer',
-      }}
-    >
-      {label}
-    </button>
-  )
-}
-
 function AiDrawer({ member, onGenerate, onNeedProfile }) {
-  const [tone, setTone] = useState('Formal')
-  const [length, setLength] = useState('Medium')
   const [instructions, setInstructions] = useState('')
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState(null)
@@ -164,7 +141,7 @@ function AiDrawer({ member, onGenerate, onNeedProfile }) {
     try {
       const result = await onGenerate({
         profile,
-        options: { tone, length, instructions: instructions.trim() || undefined },
+        options: { instructions: instructions.trim() || undefined },
       })
       if (result?.error) setError(result.error)
     } catch (e) {
@@ -188,32 +165,12 @@ function AiDrawer({ member, onGenerate, onNeedProfile }) {
           <span className="text-xs" style={{ color: '#334155' }}>🔒 stays on your device</span>
         </div>
 
-        {/* Tone + Length rows */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs w-12 flex-shrink-0" style={{ color: '#475569' }}>Tone</span>
-            <div className="flex gap-1.5 flex-wrap">
-              {TONES.map(t => (
-                <Chip key={t} label={t} active={tone === t} onClick={() => setTone(t)} />
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs w-12 flex-shrink-0" style={{ color: '#475569' }}>Length</span>
-            <div className="flex gap-1.5 flex-wrap">
-              {LENGTHS.map(l => (
-                <Chip key={l} label={l} active={length === l} onClick={() => setLength(l)} />
-              ))}
-            </div>
-          </div>
-        </div>
-
         {/* Instructions */}
         <div>
           <textarea
             value={instructions}
             onChange={e => setInstructions(e.target.value)}
-            placeholder="Extra instructions (optional) — e.g. mention my Python skills, keep it under 100 words..."
+            placeholder="Extra instructions (optional) — e.g. mention my Python skills, I met them at a conference..."
             rows={2}
             style={{
               ...INPUT_STYLE,
@@ -383,14 +340,14 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
 
   async function handleGenerate({ profile, options }) {
     try {
-      const { subject, body } = await generateEmail({
+      await generateEmailStream({
         lab: { name: member.labName ?? '', overview: member.labOverview ?? '' },
         member: { name: member.name, role: member.role ?? '' },
         profile,
         options,
+        onSubject: (partial) => updateDraft(member.id, 'subject', partial),
+        onBody: (partial) => updateDraft(member.id, 'body', partial),
       })
-      updateDraft(member.id, 'subject', subject)
-      updateDraft(member.id, 'body', body)
       return {}
     } catch (e) {
       return { error: e.message || 'Generation failed' }
