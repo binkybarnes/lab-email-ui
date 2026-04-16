@@ -208,26 +208,10 @@ async def select_best_url_llm(faculty: Faculty, candidates: list[dict]) -> str |
     )
     
     # Pre-process candidates — tag profile URLs so the LLM can't misjudge them
-    has_profile_resolved = any(c.get("profile_resolved") for c in candidates)
     candidate_list = ""
     for i, c in enumerate(candidates, 1):
-        if c.get("profile_resolved"):
-            tag = " ✅ LINKED FROM PROFILE"
-        elif is_profile_url(c['url']):
-            tag = " ⚠️ PROFILE PAGE"
-        else:
-            tag = ""
+        tag = " ⚠️ PROFILE PAGE" if is_profile_url(c['url']) else ""
         candidate_list += f"{i}. Title: {c['title']}\n   URL: {c['url']}{tag}\n   Description: {c['snippet']}\n\n"
-
-    profile_resolved_note = ""
-    if has_profile_resolved:
-        profile_resolved_note = """
-IMPORTANT: One or more results are tagged "✅ LINKED FROM PROFILE". These URLs were found by
-following an explicit lab link on the professor's department profile page — they have the
-highest prior probability of being correct. ALWAYS prefer a LINKED FROM PROFILE result over
-any other candidate unless it is obviously wrong (wrong person's name in URL, social media, etc).
-
-"""
 
     prompt = f"""
 Pick the OFFICIAL RESEARCH LAB WEBSITE for {faculty['name']} at UCSD ({faculty['department']}).
@@ -240,7 +224,7 @@ PROFILE PAGES ARE NOT LAB WEBSITES. Any URL with a path like /user/name, /facult
 /profile/name, /directory/name, /content/name, /people/name, or /bio/name is a profile page.
 Profile pages are hosted on someone else's site (a department, a center, a university portal).
 Results tagged with "⚠️ PROFILE PAGE" have been automatically detected as profile URLs.
-{profile_resolved_note}
+
 YOU CANNOT KNOW what sections a page has from a search snippet. Do NOT claim a page "has sections
 for People, Research, Publications" unless the URL itself is clearly a standalone lab domain.
 Judge ONLY by the URL structure and the search snippet — do not invent content.
@@ -254,7 +238,6 @@ Output JSON:
 
 SCORING (by URL structure, not imagined content):
 - 9-10: A dedicated lab domain/subdomain (labname.ucsd.edu, labname.org, dept.ucsd.edu/labname/).
-  Boost to 10 if also tagged LINKED FROM PROFILE.
 - 7-8: A department page that MIGHT be a lab section (not a single-person profile path).
 - 5-6: A profile/directory/bio page — pick ONLY if nothing better exists. These often link to the real lab.
 - 0-4: Wrong person, social media, publications database.
@@ -331,31 +314,26 @@ async def find_url_for_professor(session: aiohttp.ClientSession, api_key: str, f
             if not candidates:
                 return {**faculty, "lab_url": None, "lab_url_uncertain_reason": None}
 
-            # Pre-LLM: check profile-URL candidates for lab links and add
-            # discovered lab URLs as high-quality candidates before the LLM ranks.
-            seen_urls = {c["url"] for c in candidates}
+            # Profile-first: check profile pages for explicit lab links.
+            # A professor's own profile linking to a lab IS the verification.
             profile_candidates = [c for c in candidates if is_profile_url(c["url"])]
             for pc in profile_candidates[:3]:  # cap to avoid too many fetches
                 resolved = await resolve_lab_url(session, pc["url"], name=faculty["name"])
-                if resolved != pc["url"] and resolved not in seen_urls:
-                    seen_urls.add(resolved)
-                    candidates.append({
-                        "url": resolved,
-                        "title": f"Lab website (found via {pc['title']})",
-                        "snippet": f"Linked from profile page: {pc['url']}",
-                        "profile_resolved": True,
-                    })
+                if resolved != pc["url"]:
+                    print(f"  ✅ Profile-resolved lab for {faculty['name']}: {resolved}")
+                    return {**faculty, "lab_url": resolved, "lab_url_uncertain_reason": None}
 
-            # Use LLM to pick the best candidate
-            best_url = await select_best_url_llm(faculty, candidates)
-            # If the URL is still a profile page, try to resolve it to the real lab
+            # Fallback: LLM ranks non-profile candidates only
+            non_profile_candidates = [c for c in candidates if not is_profile_url(c["url"])]
+            best_url = await select_best_url_llm(faculty, non_profile_candidates)
+            # If the LLM picked something that turns out to be a profile, try resolving
             if best_url:
                 best_url = await resolve_lab_url(session, best_url, name=faculty["name"])
 
             if not best_url:
                 return {**faculty, "lab_url": None, "lab_url_uncertain_reason": None}
 
-            # Verify the lab page actually belongs to this professor
+            # Verify only LLM-selected URLs (no profile provenance)
             certain, reason = await verify_lab_url(session, best_url, faculty["name"])
             if not certain:
                 print(f"  ⚠️  Uncertain: {faculty['name']} → {best_url} ({reason})")
@@ -381,7 +359,8 @@ async def run() -> None:
     semaphore = asyncio.Semaphore(CONCURRENCY)
     results: list[FacultyWithURL] = []
 
-    async with aiohttp.ClientSession() as session:
+    headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"}
+    async with aiohttp.ClientSession(headers=headers) as session:
         async def bounded(f):
             async with semaphore:
                 return await find_url_for_professor(session, BRAVE_API_KEY, f)
