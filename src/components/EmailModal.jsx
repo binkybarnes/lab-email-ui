@@ -125,7 +125,7 @@ function DisclaimerPopup({ onAccept, onCancel }) {
   )
 }
 
-function AiDrawer({ member, onGenerate, onNeedProfile }) {
+function AiDrawer({ onGenerate, onNeedProfile }) {
   const [instructions, setInstructions] = useState('')
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState(null)
@@ -183,7 +183,7 @@ function AiDrawer({ member, onGenerate, onNeedProfile }) {
           />
         </div>
 
-        {/* Generate row */}
+        {/* Action row */}
         <div className="flex items-center justify-between gap-3">
           <button
             onClick={handleGenerate}
@@ -506,7 +506,6 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
         <AnimatePresence>
           {showAiDrawer && (
             <AiDrawer
-              member={member}
               onGenerate={handleGenerate}
               onNeedProfile={onOpenProfile}
             />

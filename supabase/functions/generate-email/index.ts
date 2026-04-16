@@ -43,7 +43,7 @@ function buildPrompt({ lab, member, profile, options }: {
 STRUCTURE — follow this order exactly:
 1. First sentence: State who you are (name, year, institution) and what you want. Be direct. Example: "I'm Alex, a third-year biochem major at UCSD, and I'm looking for a research position in your lab."
 2. Second paragraph (2-3 sentences): Why YOU. What got you into this field? What have you worked on that's relevant? Be specific — name a technique, a class project, a result, a question that keeps you up at night. This is the core of the email.
-3. Third paragraph (1-2 sentences): Why THIS LAB specifically. Connect your interests to their research using the lab overview provided. Do NOT just restate their research back to them — explain why it matters to you or how it connects to what you've done.
+3. Third paragraph (1-2 sentences): Why THIS LAB specifically. Connect your interests to their research using the lab overview provided. Do NOT just restate their research back to them — explain why it matters to you or how it connects to what you've done. IMPORTANT: If the sender's background does NOT directly relate to the lab's research area, do NOT fake a connection. Instead, be honest — say what you can bring from your actual background (e.g. data skills, programming, analysis) and express genuine curiosity to learn the lab's domain. Honesty is always better than a forced connection a professor will see through.
 4. One closing sentence: Something like "Would it be possible to chat about opportunities in your lab?" or "I'd love to learn more about whether there might be a fit." Keep it simple.
 5. Sign off: First name only on its own line. No "Best", no "Sincerely", no "Regards".
 
@@ -109,7 +109,7 @@ serve(async (req) => {
     })
   }
 
-  let payload: { lab: any; member: any; profile: any; options: any; stream?: boolean }
+  let payload: { lab?: any; member?: any; profile?: any; options?: any; stream?: boolean; mode?: string }
   try {
     payload = await req.json()
   } catch {
@@ -117,6 +117,83 @@ serve(async (req) => {
       status: 400,
       headers: { ...CORS, 'Content-Type': 'application/json' },
     })
+  }
+
+  // Profile review mode — returns feedback on profile quality before generating
+  if (payload.mode === 'review-profile') {
+    const { profile, lab } = payload
+    if (!profile) {
+      return new Response(JSON.stringify({ error: 'Missing profile' }), {
+        status: 400,
+        headers: { ...CORS, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const reviewPrompt = `You are a brutally honest writing coach helping a student improve their cold email profile before they email a professor.
+
+Review the student's profile fields below. For each field that is vague, generic, or unhelpful, give ONE short, specific suggestion to improve it. If a field is already good, skip it.
+
+Focus on:
+- Is "Research experience" specific enough? Does it name actual techniques, tools, projects, or results? Or is it vague filler like "interested in biology"?
+- Does "What got them into this field" tell a real story or is it generic?
+- Does "Standout detail" actually stand out?
+- If the student's background doesn't obviously connect to the lab's research area, point that out and suggest how they could frame what they DO bring (data skills, programming, analysis, etc.) honestly instead of faking a connection.
+
+${lab ? `The lab they're emailing studies: ${lab.overview}` : ''}
+
+Return your response as valid JSON: {"suggestions": [{"field": "experience", "issue": "...", "suggestion": "..."}, ...]}
+Only include fields that need improvement. If everything looks good, return {"suggestions": []}.`
+
+    const reviewUserPrompt = `Student profile:
+- Name: ${profile.name}
+- Academic status: ${profile.status}
+- Institution: ${profile.institution}
+- Research experience: ${profile.experience}
+- What got them into this field: ${profile.whyField}
+- Goal: ${profile.goal}${profile.standout ? `\n- Standout detail: ${profile.standout}` : ''}`
+
+    try {
+      const reviewRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openrouterKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://lab-emailer.app',
+          'X-Title': 'Lab Emailer',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.0-flash-lite-001',
+          messages: [
+            { role: 'system', content: reviewPrompt },
+            { role: 'user', content: reviewUserPrompt },
+          ],
+          response_format: { type: 'json_object' },
+          temperature: 0.3,
+        }),
+      })
+
+      if (!reviewRes.ok) {
+        const errText = await reviewRes.text()
+        return new Response(JSON.stringify({ error: `Review failed: ${errText}` }), {
+          status: 502,
+          headers: { ...CORS, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const reviewData = await reviewRes.json()
+      const content = reviewData?.choices?.[0]?.message?.content
+      const parsed = typeof content === 'string' ? JSON.parse(content) : content
+
+      return new Response(JSON.stringify(parsed), {
+        status: 200,
+        headers: { ...CORS, 'Content-Type': 'application/json' },
+      })
+    } catch (e: any) {
+      return new Response(JSON.stringify({ error: `Review failed: ${e.message}` }), {
+        status: 502,
+        headers: { ...CORS, 'Content-Type': 'application/json' },
+      })
+    }
   }
 
   const { lab, member, profile, options, stream = false } = payload

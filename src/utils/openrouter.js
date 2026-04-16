@@ -1,6 +1,19 @@
 import { supabase } from '../lib/supabase'
 
 /**
+ * Review profile quality before generating. Returns { suggestions: [...] }.
+ * Each suggestion has { field, issue, suggestion }.
+ */
+export async function reviewProfile({ profile, lab }) {
+  const { data, error } = await supabase.functions.invoke('generate-email', {
+    body: { mode: 'review-profile', profile, lab },
+  })
+
+  if (error) throw new Error(error.message || 'Failed to review profile')
+  return data
+}
+
+/**
  * Non-streaming email generation. Returns { subject, body }.
  */
 export async function generateEmail({ lab, member, profile, options }) {
