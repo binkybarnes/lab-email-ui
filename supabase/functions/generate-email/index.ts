@@ -140,7 +140,7 @@ serve(async (req) => {
         'X-Title': 'Lab Emailer',
       },
       body: JSON.stringify({
-        model: 'openrouter/elephant-alpha',
+        model: 'google/gemini-2.0-flash-lite-001',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
