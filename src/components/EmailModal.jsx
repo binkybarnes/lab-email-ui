@@ -172,6 +172,7 @@ function AiDrawer({ onGenerate, onNeedProfile }) {
             onChange={e => setInstructions(e.target.value)}
             placeholder="Extra instructions (optional) — e.g. mention my Python skills, I met them at a conference..."
             rows={2}
+            maxLength={500}
             style={{
               ...INPUT_STYLE,
               fontSize: 12,
@@ -181,6 +182,13 @@ function AiDrawer({ onGenerate, onNeedProfile }) {
             onFocus={e => e.target.style.borderColor = '#4d6dff'}
             onBlur={e => e.target.style.borderColor = '#363b47'}
           />
+          {instructions.length > 400 && (
+            <div className="text-right mt-0.5">
+              <span className="text-[10px]" style={{ color: instructions.length >= 500 ? '#f87171' : '#64748b' }}>
+                {instructions.length} / 500
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Action row */}
@@ -495,7 +503,7 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
               onChange={e => updateDraft(member.id, 'body', e.target.value)}
               placeholder="Write your email..."
               rows={10}
-              style={{ ...INPUT_STYLE, resize: 'none' }}
+              style={{ ...INPUT_STYLE, minHeight: `${10 * 22 + 14}px`, fieldSizing: 'content', resize: 'none' }}
               onFocus={e => e.target.style.borderColor = '#4d6dff'}
               onBlur={e => e.target.style.borderColor = '#363b47'}
             />

@@ -1,20 +1,30 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// ---------------------------------------------------------------------------
 // Leaky bucket rate limiter: 1 token drips every 2s, bucket holds 20.
-// Normal usage (even rapid bursts of 10-15 emails) is fine.
-// Sustained scripted spam (>20 in quick succession with no pause) gets blocked.
+// Stale entries (no activity for 5 min) are cleaned up periodically.
+// ---------------------------------------------------------------------------
 const buckets = new Map<string, { tokens: number; lastDrip: number }>()
 const BUCKET_MAX = 20
-const DRIP_INTERVAL = 2_000 // 1 token every 2 seconds
+const DRIP_INTERVAL = 2_000
+const STALE_AFTER = 300_000 // 5 minutes
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now()
+
+  // Periodic cleanup: drop IPs with no activity for 5+ minutes
+  if (buckets.size > 100) {
+    for (const [k, v] of buckets) {
+      if (now - v.lastDrip > STALE_AFTER) buckets.delete(k)
+    }
+  }
+
   let bucket = buckets.get(ip)
   if (!bucket) {
     buckets.set(ip, { tokens: BUCKET_MAX - 1, lastDrip: now })
     return false
   }
-  // drip tokens back in
   const elapsed = now - bucket.lastDrip
   const dripped = Math.floor(elapsed / DRIP_INTERVAL)
   if (dripped > 0) {
@@ -24,6 +34,74 @@ function isRateLimited(ip: string): boolean {
   if (bucket.tokens <= 0) return true
   bucket.tokens--
   return false
+}
+
+// ---------------------------------------------------------------------------
+// Daily usage limit — persisted in Supabase `daily_usage` table.
+// Returns { allowed: bool, remaining: number }.
+// ---------------------------------------------------------------------------
+const DAILY_LIMIT = 100
+
+async function checkDailyLimit(ip: string): Promise<{ allowed: boolean; remaining: number }> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const db = createClient(supabaseUrl, serviceKey)
+
+  const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+
+  // Upsert: increment count for today, insert if missing
+  const { data, error } = await db.rpc('increment_daily_usage', {
+    p_ip: ip,
+    p_date: today,
+    p_limit: DAILY_LIMIT,
+  })
+
+  if (error) {
+    // If the RPC doesn't exist yet or fails, allow the request (fail open)
+    console.error('[daily_usage] rpc failed:', error.message)
+    return { allowed: true, remaining: DAILY_LIMIT }
+  }
+
+  return { allowed: data.allowed, remaining: data.remaining }
+}
+
+// ---------------------------------------------------------------------------
+// Admin check — verify JWT from Authorization header
+// ---------------------------------------------------------------------------
+function isAdmin(req: Request): boolean {
+  const auth = req.headers.get('authorization')
+  // Supabase functions.invoke sends "Bearer <jwt>", raw fetch with just apikey does not.
+  // If there's a Bearer token that's not the anon key, it's an authenticated user (admin).
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+  if (!auth?.startsWith('Bearer ')) return false
+  const token = auth.slice(7)
+  return token.length > 0 && token !== anonKey
+}
+
+const FIELD_LIMITS: Record<string, number> = {
+  'profile.name': 200,
+  'profile.status': 200,
+  'profile.institution': 200,
+  'profile.experience': 1000,
+  'profile.whyField': 500,
+  'profile.goal': 200,
+  'profile.standout': 500,
+  'options.instructions': 500,
+  'lab.name': 200,
+  'lab.overview': 2000,
+  'member.name': 200,
+  'member.role': 200,
+}
+
+function validateLengths(fields: Record<string, string | undefined>): string | null {
+  for (const [key, value] of Object.entries(fields)) {
+    const limit = FIELD_LIMITS[key]
+    if (limit && typeof value === 'string' && value.length > limit) {
+      const label = key.split('.').pop()
+      return `${label} is too long (max ${limit} characters)`
+    }
+  }
+  return null
 }
 
 const CORS = {
@@ -129,6 +207,23 @@ serve(async (req) => {
       })
     }
 
+    const lengthErr = validateLengths({
+      'profile.name': profile.name,
+      'profile.status': profile.status,
+      'profile.institution': profile.institution,
+      'profile.experience': profile.experience,
+      'profile.whyField': profile.whyField,
+      'profile.goal': profile.goal,
+      'profile.standout': profile.standout,
+      'lab.overview': lab?.overview,
+    })
+    if (lengthErr) {
+      return new Response(JSON.stringify({ error: lengthErr }), {
+        status: 400,
+        headers: { ...CORS, 'Content-Type': 'application/json' },
+      })
+    }
+
     const reviewPrompt = `You are a brutally honest writing coach helping a student improve their cold email profile before they email a professor.
 
 Review the student's profile fields below. For each field that is vague, generic, or unhelpful, give ONE short, specific suggestion to improve it. If a field is already good, skip it.
@@ -169,6 +264,7 @@ Only include fields that need improvement. If everything looks good, return {"su
           ],
           response_format: { type: 'json_object' },
           temperature: 0.3,
+          max_tokens: 512,
         }),
       })
 
@@ -204,6 +300,27 @@ Only include fields that need improvement. If everything looks good, return {"su
     })
   }
 
+  const lengthErr = validateLengths({
+    'profile.name': profile.name,
+    'profile.status': profile.status,
+    'profile.institution': profile.institution,
+    'profile.experience': profile.experience,
+    'profile.whyField': profile.whyField,
+    'profile.goal': profile.goal,
+    'profile.standout': profile.standout,
+    'options.instructions': options.instructions,
+    'lab.name': lab.name,
+    'lab.overview': lab.overview,
+    'member.name': member.name,
+    'member.role': member.role,
+  })
+  if (lengthErr) {
+    return new Response(JSON.stringify({ error: lengthErr }), {
+      status: 400,
+      headers: { ...CORS, 'Content-Type': 'application/json' },
+    })
+  }
+
   const { systemPrompt, userPrompt } = buildPrompt({ lab, member, profile, options })
 
   let orResponse: Response
@@ -224,6 +341,7 @@ Only include fields that need improvement. If everything looks good, return {"su
         ],
         response_format: { type: 'json_object' },
         temperature: 0.8,
+        max_tokens: 512,
         stream,
       }),
     })

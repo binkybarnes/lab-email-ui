@@ -26,13 +26,13 @@ const INPUT_STYLE = {
 }
 
 const FIELDS = [
-  { key: 'name', label: 'Your full name', placeholder: 'e.g. Alex Kim', type: 'input' },
-  { key: 'status', label: 'Academic status', placeholder: 'e.g. 3rd year undergrad, incoming PhD student, postdoc', type: 'input' },
-  { key: 'institution', label: 'Institution / department', placeholder: 'e.g. UC San Diego, Biochemistry', type: 'input' },
-  { key: 'experience', label: 'Research experience', placeholder: 'What have you actually worked on? Mention techniques, tools, projects. e.g. "Spent a quarter doing calcium imaging analysis in Python"', type: 'textarea', rows: 3 },
-  { key: 'whyField', label: 'What got you into this field?', placeholder: '1-2 sentences — a class, paper, or experience that sparked your interest', type: 'textarea', rows: 2 },
-  { key: 'goal', label: "What you're looking for", placeholder: 'e.g. rotation, PhD position, undergrad research position, postdoc', type: 'input' },
-  { key: 'standout', label: 'Something that makes you stand out (optional)', placeholder: 'A specific skill, result, or project. e.g. "Built a pipeline to automate microscopy image segmentation"', type: 'textarea', rows: 2 },
+  { key: 'name', label: 'Your full name', placeholder: 'e.g. Alex Kim', type: 'input', maxLength: 200 },
+  { key: 'status', label: 'Academic status', placeholder: 'e.g. 3rd year undergrad, incoming PhD student, postdoc', type: 'input', maxLength: 200 },
+  { key: 'institution', label: 'Institution / department', placeholder: 'e.g. UC San Diego, Biochemistry', type: 'input', maxLength: 200 },
+  { key: 'experience', label: 'Research experience', placeholder: 'What have you actually worked on? Mention techniques, tools, projects. e.g. "Spent a quarter doing calcium imaging analysis in Python"', type: 'textarea', rows: 3, maxLength: 1000 },
+  { key: 'whyField', label: 'What got you into this field?', placeholder: '1-2 sentences — a class, paper, or experience that sparked your interest', type: 'textarea', rows: 2, maxLength: 500 },
+  { key: 'goal', label: "What you're looking for", placeholder: 'e.g. rotation, PhD position, undergrad research position, postdoc', type: 'input', maxLength: 200 },
+  { key: 'standout', label: 'Something that makes you stand out (optional)', placeholder: 'A specific skill, result, or project. e.g. "Built a pipeline to automate microscopy image segmentation"', type: 'textarea', rows: 2, maxLength: 600 },
 ]
 
 const FIELD_LABELS = {
@@ -42,12 +42,6 @@ const FIELD_LABELS = {
   status: 'Academic status',
   institution: 'Institution',
   goal: 'Goal',
-}
-
-function autoResize(el) {
-  if (!el) return
-  el.style.height = 'auto'
-  el.style.height = el.scrollHeight + 'px'
 }
 
 export default function ProfileModal({ open, onClose, onSave }) {
@@ -128,44 +122,54 @@ export default function ProfileModal({ open, onClose, onSave }) {
 
           {/* Fields */}
           <div className="flex flex-col gap-4 px-5 py-4 overflow-y-auto flex-1">
-            {FIELDS.map(({ key, label, placeholder, type, rows }) => (
-              <div key={key}>
-                <label className="text-xs text-muted block mb-1">{label}</label>
-                {type === 'textarea' ? (
-                  <textarea
-                    ref={el => el && autoResize(el)}
-                    value={form[key]}
-                    onChange={e => {
-                      setForm(prev => ({ ...prev, [key]: e.target.value }))
-                      autoResize(e.target)
-                    }}
-                    placeholder={placeholder}
-                    style={{
-                      ...INPUT_STYLE,
-                      resize: 'none',
-                      overflow: 'hidden',
-                      minHeight: `${rows * 22 + 14}px`,
-                      borderColor: focusedKey === key ? '#4d6dff' : '#363b47',
-                    }}
-                    onFocus={() => setFocusedKey(key)}
-                    onBlur={() => setFocusedKey(null)}
-                  />
-                ) : (
-                  <input
-                    type="text"
-                    value={form[key]}
-                    onChange={e => setForm(prev => ({ ...prev, [key]: e.target.value }))}
-                    placeholder={placeholder}
-                    style={{
-                      ...INPUT_STYLE,
-                      borderColor: focusedKey === key ? '#4d6dff' : '#363b47',
-                    }}
-                    onFocus={() => setFocusedKey(key)}
-                    onBlur={() => setFocusedKey(null)}
-                  />
-                )}
-              </div>
-            ))}
+            {FIELDS.map(({ key, label, placeholder, type, rows, maxLength }) => {
+              const len = form[key]?.length || 0
+              const showCounter = maxLength && len > maxLength * 0.8
+              const atLimit = maxLength && len >= maxLength
+              return (
+                <div key={key}>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs text-muted">{label}</label>
+                    {showCounter && (
+                      <span className="text-[10px]" style={{ color: atLimit ? '#f87171' : '#64748b' }}>
+                        {len} / {maxLength}
+                      </span>
+                    )}
+                  </div>
+                  {type === 'textarea' ? (
+                    <textarea
+                      value={form[key]}
+                      onChange={e => setForm(prev => ({ ...prev, [key]: e.target.value }))}
+                      placeholder={placeholder}
+                      maxLength={maxLength}
+                      style={{
+                        ...INPUT_STYLE,
+                        resize: 'none',
+                        fieldSizing: 'content',
+                        minHeight: `${rows * 22 + 14}px`,
+                        borderColor: focusedKey === key ? '#4d6dff' : '#363b47',
+                      }}
+                      onFocus={() => setFocusedKey(key)}
+                      onBlur={() => setFocusedKey(null)}
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      value={form[key]}
+                      onChange={e => setForm(prev => ({ ...prev, [key]: e.target.value }))}
+                      placeholder={placeholder}
+                      maxLength={maxLength}
+                      style={{
+                        ...INPUT_STYLE,
+                        borderColor: focusedKey === key ? '#4d6dff' : '#363b47',
+                      }}
+                      onFocus={() => setFocusedKey(key)}
+                      onBlur={() => setFocusedKey(null)}
+                    />
+                  )}
+                </div>
+              )
+            })}
           </div>
 
           {/* Footer */}
@@ -198,7 +202,7 @@ export default function ProfileModal({ open, onClose, onSave }) {
                     Checking...
                   </>
                 ) : (
-                  '✦ Check profile'
+                  '✦ Profile feedback'
                 )}
               </button>
               <div className="flex gap-2">
