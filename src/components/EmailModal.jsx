@@ -307,7 +307,7 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
 
   // Sync the contentEditable HTML when the draft body changes externally (e.g. navigation)
   const member = open && members.length > 0 ? members[currentIndex] : null
-  const draft = member ? (drafts[member.id] ?? { subject: '', body: '' }) : { subject: '', body: '' }
+  const draft = member ? (drafts[member.id] ?? { subject: '', body: '', toOverride: '' }) : { subject: '', body: '', toOverride: '' }
 
   useEffect(() => {
     if (!bodyRef.current || !open || isInternalUpdate.current) {
@@ -358,8 +358,6 @@ export default function EmailModal({ modal, onClose, onNavigate, session, getAcc
 
   if (!open || members.length === 0) return null
 
-  const member = members[currentIndex]
-  const draft = drafts[member.id] ?? { subject: '', body: '', toOverride: '' }
   const isMulti = members.length > 1
   const currentResult = results[member.id]
 
