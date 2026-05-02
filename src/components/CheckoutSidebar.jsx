@@ -11,7 +11,7 @@ const ROLE_ACCENT = {
 
 const SPRING = { type: 'spring', stiffness: 500, damping: 34, mass: 0.8 }
 
-export default function CheckoutSidebar({ selectedMembers, onRemove, onEmail, onEmailAll, isOpen, setIsOpen }) {
+export default function CheckoutSidebar({ selectedMembers, onRemove, onClearAll, onEmail, onEmailAll, isOpen, setIsOpen, emailResults = {} }) {
   if (selectedMembers.length === 0) return null
 
   const grouped = selectedMembers.reduce((acc, member) => {
@@ -125,8 +125,18 @@ export default function CheckoutSidebar({ selectedMembers, onRemove, onEmail, on
                       className="flex-1 min-w-0 cursor-pointer flex flex-col justify-center py-1.5"
                       onClick={e => { e.stopPropagation(); onEmail([member]) }}
                     >
-                      <div className="text-xs font-medium text-primary truncate hover:text-[#7b9fff] transition-colors whitespace-nowrap">
-                        {member.name}
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-xs font-medium text-primary truncate hover:text-[#7b9fff] transition-colors whitespace-nowrap">
+                          {member.name}
+                        </span>
+                        {emailResults[member.id]?.ok && (
+                          <span
+                            className="text-[10px] px-1 py-px flex-shrink-0 leading-tight"
+                            style={{ background: 'rgba(34,197,94,0.15)', color: '#4ade80', borderRadius: '2px' }}
+                          >
+                            sent
+                          </span>
+                        )}
                       </div>
                       <div className="text-[11px] text-muted truncate whitespace-nowrap">{member.email}</div>
                     </div>
@@ -154,12 +164,21 @@ export default function CheckoutSidebar({ selectedMembers, onRemove, onEmail, on
         style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
       >
         <div
-          className="px-3 py-3"
+          className="px-3 py-3 flex gap-2"
           style={{ borderTop: '1px solid #363b47' }}
         >
           <button
+            onClick={onClearAll}
+            className="py-2 text-xs transition-all duration-150 truncate flex-shrink-0 px-3"
+            style={{ background: 'transparent', color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', borderRadius: '3px' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,113,113,0.08)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          >
+            Clear
+          </button>
+          <button
             onClick={() => onEmailAll(selectedMembers)}
-            className="w-full py-2 text-xs transition-all duration-150 truncate"
+            className="flex-1 py-2 text-xs transition-all duration-150 truncate"
             style={{ background: '#4d6dff', color: '#fff', borderRadius: '3px' }}
             onMouseEnter={e => e.currentTarget.style.background = '#3d5df0'}
             onMouseLeave={e => e.currentTarget.style.background = '#4d6dff'}

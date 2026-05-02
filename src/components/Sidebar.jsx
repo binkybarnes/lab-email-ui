@@ -23,40 +23,24 @@ function DeptSection({ dept, visibleLabIds, onToggleLab, onToggleVisibleLabs }) 
         onMouseEnter={e => e.currentTarget.style.background = '#272b34'}
         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
       >
-        <div className="flex items-center justify-center relative w-4 h-4 flex-shrink-0" onClick={e => e.stopPropagation()}>
-          <input
-            type="checkbox"
-            checked={allSelected}
-            onChange={handleToggleAll}
-            className="w-3.5 h-3.5 rounded appearance-none cursor-pointer border-2 transition-colors m-0"
-            style={{
-              borderColor: allSelected ? '#4d6dff' : someSelected ? '#637ae6' : '#52586a',
-              backgroundColor: allSelected ? '#4d6dff' : someSelected ? 'rgba(77,109,255,0.2)' : 'transparent',
-              display: 'grid',
-              placeItems: 'center'
-            }}
-          />
-          {/* Custom checkmark/minus overlay */}
-          <div 
-            className="absolute pointer-events-none flex items-center justify-center w-3.5 h-3.5 top-0 left-0"
-            style={{ opacity: (allSelected || someSelected) ? 1 : 0 }}
-          >
-            {allSelected ? (
-              <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            ) : (
-              <div className="w-1.5 h-[2px] bg-[#7b9fff] rounded-full" />
-            )}
-          </div>
-        </div>
+        <input
+          type="checkbox"
+          checked={allSelected}
+          onChange={handleToggleAll}
+          onClick={e => e.stopPropagation()}
+          className="w-3.5 h-3.5 rounded appearance-none cursor-pointer border-2 transition-colors flex-shrink-0"
+          style={{
+            borderColor: allSelected ? '#4d6dff' : someSelected ? '#637ae6' : '#52586a',
+            backgroundColor: allSelected ? '#4d6dff' : someSelected ? 'rgba(77,109,255,0.2)' : 'transparent',
+          }}
+        />
 
         <span className="text-xs text-secondary font-semibold uppercase tracking-widest font-serif flex-1">
           {dept.name}
         </span>
         
         <button
-          className="p-1 hover:bg-[#363b47] text-secondary transition-colors rounded flex-shrink-0"
+          className="w-5 h-5 flex items-center justify-center hover:bg-[#363b47] text-secondary transition-colors rounded flex-shrink-0"
           title={open ? 'Collapse Department' : 'Expand Department'}
         >
           <motion.svg

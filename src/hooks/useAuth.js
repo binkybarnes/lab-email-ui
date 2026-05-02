@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 export function useAuth() {
@@ -28,6 +28,10 @@ export function useAuth() {
       options: {
         scopes: 'https://www.googleapis.com/auth/gmail.send',
         redirectTo: window.location.origin,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
       },
     })
   }
@@ -36,5 +40,21 @@ export function useAuth() {
     return supabase.auth.signOut()
   }
 
-  return { session, loading, signIn, signOut }
+  // Get a fresh Google access token by refreshing the Supabase session
+  const getAccessToken = useCallback(async () => {
+    // First check if current session has a valid provider token
+    if (session?.provider_token) return session.provider_token
+
+    // Force a session refresh to get a new provider token
+    const { data, error } = await supabase.auth.refreshSession()
+    if (error) throw new Error('Session expired — please sign in again')
+    if (data.session?.provider_token) {
+      setSession(data.session)
+      return data.session.provider_token
+    }
+
+    throw new Error('No access token — please sign in with Google')
+  }, [session])
+
+  return { session, loading, signIn, signOut, getAccessToken }
 }

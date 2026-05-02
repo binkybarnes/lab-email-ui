@@ -1,4 +1,27 @@
+import { useState, useEffect, useRef } from 'react'
 import LabSection from './LabSection'
+
+const BATCH_SIZE = 8
+
+function useProgressiveList(items) {
+  const [count, setCount] = useState(BATCH_SIZE)
+  const prevItems = useRef(items)
+
+  useEffect(() => {
+    if (prevItems.current !== items) {
+      prevItems.current = items
+      setCount(BATCH_SIZE)
+    }
+  }, [items])
+
+  useEffect(() => {
+    if (count >= items.length) return
+    const id = requestAnimationFrame(() => setCount(c => c + BATCH_SIZE))
+    return () => cancelAnimationFrame(id)
+  }, [count, items.length])
+
+  return items.slice(0, count)
+}
 
 const ROLES = ['PI', 'Postdoc', 'PhD', 'Masters', 'Staff', 'Undergrad']
 
@@ -24,13 +47,15 @@ export default function LabBrowser({
   onEmail,
   onApplyRoleSelection,
   rightOffset,
+  emailResults = {},
 }) {
   const anySelected = selectedMemberIds.size > 0
+  const batchedLabs = useProgressiveList(visibleLabs)
 
   const grouped = data.departments
     .map(dept => ({
       dept,
-      labs: visibleLabs.filter(l => l.departmentId === dept.id),
+      labs: batchedLabs.filter(l => l.departmentId === dept.id),
     }))
     .filter(g => g.labs.length > 0)
 
@@ -97,6 +122,7 @@ export default function LabBrowser({
                 onToggleLabMembers={onToggleLabMembers}
                 onEmail={onEmail}
                 anySelected={anySelected}
+                emailResults={emailResults}
               />
             ))}
           </div>

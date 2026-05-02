@@ -1,0 +1,38 @@
+<h2>How should "rerun the AI" work?</h2>
+<p class="subtitle">After the first email is generated, how does the user customize or try again?</p>
+
+<div class="options">
+  <div class="option" data-choice="tone-picker" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Tone Picker + Regenerate</h3>
+      <p>A small row of toggles before generating: <strong>Formal / Casual / Enthusiastic</strong> + length <strong>Short / Medium / Long</strong>. User tweaks these and hits Regenerate to get a new version.</p>
+      <div style="margin-top:0.75rem;display:flex;gap:0.5rem;flex-wrap:wrap">
+        <span style="background:#3b82f6;color:#fff;padding:2px 10px;border-radius:999px;font-size:0.75rem">Formal</span>
+        <span style="background:#1e293b;color:#94a3b8;padding:2px 10px;border-radius:999px;font-size:0.75rem">Casual</span>
+        <span style="background:#1e293b;color:#94a3b8;padding:2px 10px;border-radius:999px;font-size:0.75rem">Enthusiastic</span>
+        &nbsp;·&nbsp;
+        <span style="background:#1e293b;color:#94a3b8;padding:2px 10px;border-radius:999px;font-size:0.75rem">Short</span>
+        <span style="background:#7c3aed;color:#fff;padding:2px 10px;border-radius:999px;font-size:0.75rem">Medium</span>
+        <span style="background:#1e293b;color:#94a3b8;padding:2px 10px;border-radius:999px;font-size:0.75rem">Long</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="freeform" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Freeform Instruction Box</h3>
+      <p>A small text field: <em>"Any instructions? (optional)"</em> — e.g. "mention my Python skills", "keep it under 150 words", "focus on their cancer metabolism work". User types what they want and hits Generate.</p>
+      <div style="margin-top:0.75rem;background:#0f172a;border:1px solid #334155;border-radius:6px;padding:6px 10px;font-size:0.75rem;color:#94a3b8;font-style:italic">"make it shorter and mention my cell biology background"</div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="both" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Both — Tone Toggles + Instruction Box</h3>
+      <p>Tone/length chips for quick adjustments, <em>plus</em> an optional freeform box for specific requests. More control, slightly more UI.</p>
+    </div>
+  </div>
+</div>

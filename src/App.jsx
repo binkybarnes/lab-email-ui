@@ -1,17 +1,35 @@
-import { useState } from 'react'
+import { lazy, Suspense, useEffect, useDeferredValue, useState } from 'react'
 import { AnimatePresence } from 'motion/react'
 import { useAppState } from './hooks/useAppState'
 import { useAuth } from './hooks/useAuth'
+import useUsageStore from './stores/useUsageStore'
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import LabBrowser from './components/LabBrowser'
 import CheckoutSidebar from './components/CheckoutSidebar'
-import EmailModal from './components/EmailModal'
-import LoginScreen from './components/LoginScreen'
-import DisclaimerModal from './components/DisclaimerModal'
+
+const EmailModal = lazy(() => import('./components/EmailModal'))
+const ProfileModal = lazy(() => import('./components/ProfileModal'))
+
+function useDevMode() {
+  const [devMode] = useState(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('dev') === '0') {
+      localStorage.removeItem('dev_mode')
+      return false
+    }
+    if (params.has('dev')) {
+      localStorage.setItem('dev_mode', 'true')
+      return true
+    }
+    return localStorage.getItem('dev_mode') === 'true'
+  })
+  return devMode
+}
 
 export default function App() {
-  const { session, loading, signIn, signOut } = useAuth()
+  const devMode = useDevMode()
+  const { session, loading, signIn, signOut, getAccessToken } = useAuth()
 
   const {
     data,
@@ -30,25 +48,30 @@ export default function App() {
     clearSelection,
     openEmailModal,
     closeEmailModal,
-    updateDraft,
     navigateModal,
   } = useAppState()
 
+  const deferredVisibleLabs = useDeferredValue(visibleLabs)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(true)
+  const [emailResults, setEmailResults] = useState({}) // memberId -> { ok, error, composed }
+  const [profileOpen, setProfileOpen] = useState(false)
+
+  useEffect(() => { useUsageStore.getState().fetch() }, [])
   const showCheckout = selectedMembers.length > 0
   const rightOffset = showCheckout ? (isCheckoutOpen ? '18.2rem' : '3.7rem') : '0'
 
-  if (loading) return null
-
-  if (!session) return <LoginScreen onSignIn={signIn} />
+  if (loading || !data) return null
 
   return (
     <div className="relative min-h-screen grid-bg">
       <Navbar
         selectedCount={selectedMembers.length}
         rightOffset={rightOffset}
-        user={session.user}
-        onSignOut={signOut}
+        user={devMode ? (session?.user ?? null) : null}
+        onSignOut={devMode && session ? signOut : null}
+        devMode={devMode}
+        onSignIn={devMode && !session ? signIn : null}
+        onProfile={() => setProfileOpen(true)}
       />
       <Sidebar
         data={data}
@@ -58,7 +81,7 @@ export default function App() {
       />
       <LabBrowser
         data={data}
-        visibleLabs={visibleLabs}
+        visibleLabs={deferredVisibleLabs}
         roleFilter={roleFilter}
         setRoleFilter={setRoleFilter}
         selectedMemberIds={selectedMemberIds}
@@ -67,6 +90,7 @@ export default function App() {
         onEmail={openEmailModal}
         onApplyRoleSelection={applyRoleSelection}
         rightOffset={rightOffset}
+        emailResults={emailResults}
       />
       <AnimatePresence>
         {showCheckout && (
@@ -74,22 +98,37 @@ export default function App() {
             key="checkout"
             selectedMembers={selectedMembers}
             onRemove={toggleMember}
+            onClearAll={clearSelection}
             onEmail={openEmailModal}
             onEmailAll={openEmailModal}
             isOpen={isCheckoutOpen}
             setIsOpen={setIsCheckoutOpen}
+            emailResults={emailResults}
           />
         )}
       </AnimatePresence>
-      <EmailModal
-        modal={emailModal}
-        onClose={closeEmailModal}
-        onUpdateDraft={updateDraft}
-        onNavigate={navigateModal}
-        accessToken={session.provider_token}
-        senderEmail={session.user.email}
-      />
-      <DisclaimerModal />
+      <Suspense fallback={null}>
+        <EmailModal
+          modal={emailModal}
+          onClose={closeEmailModal}
+          onNavigate={navigateModal}
+          session={devMode ? session : null}
+          getAccessToken={devMode ? getAccessToken : null}
+          emailResults={emailResults}
+          setEmailResults={setEmailResults}
+          onOpenProfile={() => setProfileOpen(true)}
+        />
+        <AnimatePresence>
+          {profileOpen && (
+            <ProfileModal
+              key="profile"
+              open={profileOpen}
+              onClose={() => setProfileOpen(false)}
+              onSave={() => setProfileOpen(false)}
+            />
+          )}
+        </AnimatePresence>
+      </Suspense>
     </div>
   )
 }

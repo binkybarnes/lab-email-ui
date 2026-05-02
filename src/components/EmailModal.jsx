@@ -1,6 +1,11 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { sendEmail } from '../utils/gmailApi'
 import { supabase } from '../lib/supabase'
+import { getProfile } from '../utils/profile'
+import { generateEmailStream } from '../utils/openrouter'
+import useUsageStore from '../stores/useUsageStore'
+import { AiActionButton, UsageIndicator, ExhaustedMessage } from './AiComponents'
 
 const INPUT_STYLE = {
   background: '#22262e',
@@ -10,7 +15,7 @@ const INPUT_STYLE = {
   outline: 'none',
   transition: 'border-color 0.15s',
   fontFamily: '"IBM Plex Sans", sans-serif',
-  fontSize: 13,
+  fontSize: 15,
   width: '100%',
   padding: '7px 10px',
 }
@@ -81,27 +86,224 @@ async function dispatchEmail({ member, draft, accessToken, senderEmail }) {
   return result
 }
 
-export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, accessToken, senderEmail }) {
-  const { open, members, currentIndex, drafts } = modal
+function openGmailCompose({ to, subject, body }) {
+  const params = new URLSearchParams({
+    view: 'cm',
+    to: to || '',
+    su: subject || '',
+    body: body || '',
+  })
+  window.open(`https://mail.google.com/mail/?${params}`, '_blank')
+}
+
+const OVERRIDE_KEY = 'member_email_overrides'
+
+function loadOverrides() {
+  try { return JSON.parse(localStorage.getItem(OVERRIDE_KEY) || '{}') } catch { return {} }
+}
+
+function saveOverride(memberId, email) {
+  const overrides = loadOverrides()
+  if (email) overrides[memberId] = email
+  else delete overrides[memberId]
+  localStorage.setItem(OVERRIDE_KEY, JSON.stringify(overrides))
+}
+
+function buildDrafts(members) {
+  const overrides = loadOverrides()
+  return Object.fromEntries(members.map(m => [m.id, { subject: '', body: '', toOverride: overrides[m.id] ?? '' }]))
+}
+
+function DisclaimerPopup({ onAccept, onCancel }) {
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4"
+      onClick={e => { if (e.target === e.currentTarget) onCancel() }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+        className="bg-[#1e2128] border border-[#363b47] rounded-lg shadow-2xl p-6 max-w-lg w-full"
+      >
+        <div className="flex items-center gap-3 mb-4 text-[#eab308]">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <h2 className="text-lg font-semibold text-primary tracking-wide">Usage Disclaimer</h2>
+        </div>
+
+        <div className="space-y-5 text-base text-muted leading-relaxed">
+          <ul className="list-disc pl-5 space-y-4">
+            <li>
+              <strong className="text-primary font-medium">Outdated Information:</strong> Make sure to check if the person you're emailing is still at the lab.
+            </li>
+            <li>
+              <strong className="text-primary font-medium">Follow Lab Instructions:</strong> Always check the lab's website first. If they have specific rules for applying or aren't taking students, follow those instructions instead.
+            </li>
+            <li>
+              <strong className="text-primary font-medium">Do Not Spam:</strong> Please don't mass-email everyone in a lab. Only contact individuals whose research specifically aligns with yours.
+            </li>
+          </ul>
+        </div>
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-xs text-muted hover:text-secondary transition-colors"
+            style={{ border: '1px solid #363b47', borderRadius: '3px', background: 'transparent' }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onAccept}
+            className="px-5 py-2.5 bg-[#4d6dff] hover:bg-[#3d5df0] text-white text-xs uppercase tracking-wider font-medium rounded transition-colors shadow-[0_0_15px_rgba(77,109,255,0.2)] focus:outline-none focus:ring-2 focus:ring-[#4d6dff] focus:ring-offset-2 focus:ring-offset-[#1e2128]"
+          >
+            I Understand and Agree
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+function AiDrawer({ onGenerate, onNeedProfile, isAdmin }) {
+  const remaining = useUsageStore(s => s.remaining)
+  const setRemaining = useUsageStore(s => s.setRemaining)
+  const setResetsAt = useUsageStore(s => s.setResetsAt)
+  const [instructions, setInstructions] = useState('')
+  const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState(null)
+
+  async function handleGenerate() {
+    const profile = getProfile()
+    if (!profile) {
+      onNeedProfile()
+      return
+    }
+    setGenerating(true)
+    setError(null)
+    try {
+      const result = await onGenerate({
+        profile,
+        options: { instructions: instructions.trim() || undefined },
+      })
+      if (result?.error) setError(result.error)
+      if (result?.remaining !== undefined) setRemaining(result.remaining)
+      if (result?.resetsAt) setResetsAt(result.resetsAt)
+    } catch (e) {
+      setError(e.message || 'Something went wrong')
+    }
+    setGenerating(false)
+  }
+
+  const exhausted = !isAdmin && remaining === 0
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+      style={{ overflow: 'hidden', borderTop: '2px solid #4d6dff' }}
+    >
+      <div className="px-5 py-3 flex flex-col gap-3" style={{ background: 'rgba(77,109,255,0.04)' }}>
+        {/* Drawer header row */}
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium" style={{ color: '#4d6dff' }}>✦ AI Write</span>
+          <span className="text-xs" style={{ color: '#334155' }}>🔒 stays on your device</span>
+        </div>
+
+        {/* Instructions */}
+        <div>
+          <textarea
+            value={instructions}
+            onChange={e => setInstructions(e.target.value)}
+            placeholder="Extra instructions (optional) — e.g. mention my Python skills, I met them at a conference..."
+            rows={2}
+            maxLength={500}
+            style={{
+              ...INPUT_STYLE,
+              fontSize: 12,
+              resize: 'none',
+              color: '#94a3b8',
+            }}
+            onFocus={e => e.target.style.borderColor = '#4d6dff'}
+            onBlur={e => e.target.style.borderColor = '#363b47'}
+          />
+          {instructions.length > 400 && (
+            <div className="text-right mt-0.5">
+              <span className="text-[10px]" style={{ color: instructions.length >= 500 ? '#f87171' : '#64748b' }}>
+                {instructions.length} / 500
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Action row */}
+        <div className="flex items-center justify-between gap-3">
+          <AiActionButton
+            onClick={handleGenerate}
+            disabled={exhausted}
+            loading={generating}
+            loadingText="Generating..."
+          >
+            ✦ Generate
+          </AiActionButton>
+          {exhausted ? (
+            <ExhaustedMessage isAdmin={isAdmin} />
+          ) : error ? (
+            <span className="text-xs" style={{ color: '#f87171' }}>{error}</span>
+          ) : (
+            <UsageIndicator isAdmin={isAdmin} />
+          )}
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+export default function EmailModal({ modal, onClose, onNavigate, session, getAccessToken, emailResults, setEmailResults, onOpenProfile }) {
+  const { open, members, currentIndex } = modal
+  const [drafts, setDrafts] = useState({})
   const [sending, setSending] = useState(false)
-  const [results, setResults] = useState({}) // memberId -> { ok, error }
+  const results = emailResults
+  const setResults = setEmailResults
   const bodyRef = useRef(null)
   const isInternalUpdate = useRef(false)
+  const [showDisclaimer, setShowDisclaimer] = useState(false)
+  const [showAiDrawer, setShowAiDrawer] = useState(false)
+  const prevMembersRef = useRef(null)
+
+  const canSendDirect = !!session
 
   useEffect(() => {
     if (!open) return
-    return () => {
-      setResults({})
+    if (prevMembersRef.current !== members) {
+      prevMembersRef.current = members
+      setDrafts(buildDrafts(members))
       setSending(false)
     }
-  }, [open])
+  }, [open, members])
+
+  function updateDraft(memberId, field, value) {
+    if (field === 'toOverride') saveOverride(memberId, value)
+    setDrafts(prev => ({ ...prev, [memberId]: { ...prev[memberId], [field]: value } }))
+  }
 
   useEffect(() => {
     if (!open) return
-    function onKey(e) { if (e.key === 'Escape') onClose() }
+    function onKey(e) {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'Enter' && e.ctrlKey) requireDisclaimer()
+      const inInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA'
+      if (!inInput && e.key === 'ArrowLeft') onNavigate(-1)
+      if (!inInput && e.key === 'ArrowRight') onNavigate(1)
+    }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  }, [open, onClose, drafts, currentIndex, members, results, sending])
 
   // Sync the contentEditable HTML when the draft body changes externally (e.g. navigation)
   const member = open && members.length > 0 ? members[currentIndex] : null
@@ -133,7 +335,7 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
     if (!bodyRef.current || !member) return
     const plainText = getPlainText(bodyRef.current).replace(/\n$/, '')
     isInternalUpdate.current = true
-    onUpdateDraft(member.id, 'body', plainText)
+    updateDraft(member.id, 'body', plainText)
 
     // Re-render with highlights, preserving caret position
     const sel = window.getSelection()
@@ -152,48 +354,116 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
 
     // Restore caret
     restoreCaretPosition(bodyRef.current, caretOffset)
-  }, [member, onUpdateDraft])
+  }, [member])
 
   if (!open || members.length === 0) return null
 
+  const member = members[currentIndex]
+  const draft = drafts[member.id] ?? { subject: '', body: '', toOverride: '' }
   const isMulti = members.length > 1
   const currentResult = results[member.id]
 
-  async function handleSend() {
-    setSending(true)
-    const result = await dispatchEmail({ member, draft, accessToken, senderEmail })
-    setResults(prev => ({ ...prev, [member.id]: result }))
-    setSending(false)
+  function requireDisclaimer() {
+    const accepted = localStorage.getItem('disclaimer_accepted')
+    if (accepted) {
+      executeSend()
+    } else {
+      setShowDisclaimer(true)
+    }
   }
 
-  async function handleSendAll() {
+  function handleDisclaimerAccept() {
+    localStorage.setItem('disclaimer_accepted', 'true')
+    setShowDisclaimer(false)
+    executeSend()
+  }
+
+  function executeSend() {
+    if (canSendDirect) {
+      doApiSend()
+    } else {
+      doComposeSend()
+    }
+  }
+
+  async function doApiSend() {
     setSending(true)
-    for (const m of members) {
-      if (results[m.id]?.ok) continue
-      const d = drafts[m.id] ?? { subject: '', body: '' }
-      const result = await dispatchEmail({ member: m, draft: d, accessToken, senderEmail })
-      setResults(prev => ({ ...prev, [m.id]: result }))
+    try {
+      const token = await getAccessToken()
+      const result = await dispatchEmail({ member, draft, accessToken: token, senderEmail: session.user.email })
+      setResults(prev => ({ ...prev, [member.id]: result }))
+    } catch (e) {
+      setResults(prev => ({ ...prev, [member.id]: { ok: false, error: e.message } }))
     }
     setSending(false)
+    autoAdvance()
+  }
+
+  function doComposeSend() {
+    const to = member.email || draft.toOverride
+    openGmailCompose({ to, subject: draft.subject, body: draft.body })
+    setResults(prev => ({ ...prev, [member.id]: { ok: true, composed: true } }))
+    autoAdvance()
+  }
+
+  function autoAdvance() {
+    if (!isMulti) return
+    for (let i = currentIndex + 1; i < members.length; i++) {
+      if (!results[members[i].id]?.ok) {
+        onNavigate(i - currentIndex)
+        return
+      }
+    }
+    for (let i = 0; i < currentIndex; i++) {
+      if (!results[members[i].id]?.ok) {
+        onNavigate(i - currentIndex)
+        return
+      }
+    }
+  }
+
+  function handleAiWrite() {
+    const profile = getProfile()
+    if (!profile) {
+      onOpenProfile()
+      return
+    }
+    setShowAiDrawer(prev => !prev)
+  }
+
+  async function handleGenerate({ profile, options }) {
+    try {
+      const result = await generateEmailStream({
+        lab: { name: member.labName ?? '', overview: member.labOverview ?? '' },
+        member: { name: member.name, role: member.role ?? '' },
+        profile,
+        options,
+        onSubject: (partial) => updateDraft(member.id, 'subject', partial),
+        onBody: (partial) => updateDraft(member.id, 'body', partial),
+      })
+      return { remaining: result.remaining, resetsAt: result.resetsAt }
+    } catch (e) {
+      return { error: e.message || 'Generation failed' }
+    }
   }
 
   const sentCount = Object.values(results).filter(r => r.ok).length
-  const failedCount = Object.values(results).filter(r => !r.ok).length
 
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+      style={{ background: 'rgba(0,0,0,0.6)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
-        className="w-full max-w-xl flex flex-col overflow-hidden"
+        className="w-full flex flex-col overflow-hidden"
         style={{
           background: '#1e2128',
           border: '1px solid #363b47',
           borderRadius: '5px',
           boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-          maxHeight: '88vh',
+          maxHeight: '90vh',
+          maxWidth: '800px',
         }}
       >
         {/* Header */}
@@ -233,7 +503,9 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
                   color: currentResult.ok ? '#4ade80' : '#f87171',
                 }}
               >
-                {currentResult.ok ? 'sent ✓' : 'failed'}
+                {currentResult.ok
+                  ? currentResult.composed ? 'opened' : 'sent'
+                  : 'failed'}
               </span>
             )}
           </div>
@@ -250,7 +522,6 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
 
         {/* Form */}
         <div className="flex flex-col gap-3 px-5 py-4 overflow-y-auto flex-1">
-          {/* Error banner */}
           {currentResult && !currentResult.ok && (
             <div
               className="text-xs px-3 py-2"
@@ -263,7 +534,18 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
           )}
           {/* To */}
           <div>
-            <label className="text-xs text-muted block mb-1">To</label>
+            <div className="flex items-center gap-2 mb-1">
+              <label className="text-xs text-muted">To</label>
+              {!member.email && !!loadOverrides()[member.id] && (
+                <span
+                  className="text-[10px] px-1 py-px leading-tight"
+                  style={{ background: 'rgba(234,179,8,0.12)', color: '#ca8a04', border: '1px solid rgba(234,179,8,0.25)', borderRadius: '2px' }}
+                  title="Email entered manually by you — not from scraped data"
+                >
+                  user-entered
+                </span>
+              )}
+            </div>
             {member.email ? (
               <div
                 className="px-3 py-1.5 text-xs text-secondary"
@@ -275,9 +557,9 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
               <input
                 type="email"
                 value={draft.toOverride ?? ''}
-                onChange={e => onUpdateDraft(member.id, 'toOverride', e.target.value)}
+                onChange={e => updateDraft(member.id, 'toOverride', e.target.value)}
                 placeholder={`Enter email for ${member.name}...`}
-                style={{ ...INPUT_STYLE, borderColor: '#f87171' }}
+                style={{ ...INPUT_STYLE, borderColor: draft.toOverride ? '#363b47' : '#f87171' }}
                 onFocus={e => e.target.style.borderColor = '#4d6dff'}
                 onBlur={e => { if (!draft.toOverride) e.target.style.borderColor = '#f87171' }}
               />
@@ -290,7 +572,7 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
             <input
               type="text"
               value={draft.subject}
-              onChange={e => onUpdateDraft(member.id, 'subject', e.target.value)}
+              onChange={e => updateDraft(member.id, 'subject', e.target.value)}
               placeholder="Subject line..."
               style={INPUT_STYLE}
               onFocus={e => e.target.style.borderColor = '#4d6dff'}
@@ -300,6 +582,7 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
 
           {/* Body – contentEditable with highlighted placeholders */}
           <div className="flex flex-col flex-1">
+
             <label className="text-xs text-muted block mb-1">
               Body
               <span className="ml-2 text-[10px]" style={{ color: '#eab308', opacity: 0.7 }}>
@@ -329,6 +612,17 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
           </div>
         </div>
 
+        {/* AI Drawer */}
+        <AnimatePresence>
+          {showAiDrawer && (
+            <AiDrawer
+              onGenerate={handleGenerate}
+              onNeedProfile={onOpenProfile}
+              isAdmin={canSendDirect}
+            />
+          )}
+        </AnimatePresence>
+
         {/* Footer */}
         <div
           className="flex items-center justify-between px-5 py-3"
@@ -336,48 +630,50 @@ export default function EmailModal({ modal, onClose, onUpdateDraft, onNavigate, 
         >
           <div className="flex items-center gap-3">
             <button
-              disabled
-              title="Coming soon"
-              className="text-xs px-3 py-1 text-muted cursor-not-allowed opacity-40"
-              style={{ border: '1px solid #363b47', background: 'transparent', borderRadius: '3px' }}
+              onClick={handleAiWrite}
+              className="text-xs px-3 py-1 transition-all"
+              style={{
+                border: `1px solid ${showAiDrawer ? '#4d6dff' : '#363b47'}`,
+                background: showAiDrawer ? 'rgba(77,109,255,0.1)' : 'transparent',
+                color: showAiDrawer ? '#7b9fff' : '#64748b',
+                borderRadius: '3px',
+              }}
+              onMouseEnter={e => { if (!showAiDrawer) { e.currentTarget.style.borderColor = '#4d6dff'; e.currentTarget.style.color = '#7b9fff' } }}
+              onMouseLeave={e => { if (!showAiDrawer) { e.currentTarget.style.borderColor = '#363b47'; e.currentTarget.style.color = '#64748b' } }}
             >
-              ✦ AI Writer
+              ✦ AI Write
             </button>
-            {isMulti && (sentCount > 0 || failedCount > 0) && (
-              <span className="text-xs text-muted">
-                {sentCount > 0 && <span style={{ color: '#4ade80' }}>{sentCount} sent</span>}
-                {sentCount > 0 && failedCount > 0 && ' · '}
-                {failedCount > 0 && <span style={{ color: '#f87171' }}>{failedCount} failed</span>}
+            {isMulti && sentCount > 0 && (
+              <span className="text-xs" style={{ color: '#4ade80' }}>
+                {sentCount}/{members.length} {canSendDirect ? 'sent' : 'opened'}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            {isMulti && (
-              <button
-                onClick={handleSendAll}
-                disabled={sending}
-                className="text-xs px-3 py-1.5 transition-colors text-secondary disabled:opacity-50"
-                style={{ border: '1px solid #363b47', background: 'transparent', borderRadius: '3px' }}
-                onMouseEnter={e => !sending && (e.currentTarget.style.background = '#272b34')}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              >
-                {sending ? 'sending...' : `send all (${members.length})`}
-              </button>
+          <button
+            onClick={() => requireDisclaimer()}
+            disabled={sending}
+            className="text-xs px-4 py-1.5 transition-all duration-150 disabled:opacity-50 flex items-center gap-2"
+            style={{ background: '#4d6dff', color: '#fff', borderRadius: '3px' }}
+            onMouseEnter={e => !sending && (e.currentTarget.style.background = '#3d5df0')}
+            onMouseLeave={e => e.currentTarget.style.background = '#4d6dff'}
+            title="Ctrl+Enter"
+          >
+            {sending ? 'sending...' : currentResult?.ok ? (canSendDirect ? 'Resend' : 'Open again') : canSendDirect ? 'Send' : 'Open in Gmail'}
+            {!sending && (
+              <span style={{ opacity: 0.55, fontSize: 10 }}>ctrl + enter</span>
             )}
-            <button
-              onClick={handleSend}
-              disabled={sending || currentResult?.ok}
-              className="text-xs px-4 py-1.5 transition-all duration-150 disabled:opacity-50"
-              style={{ background: '#4d6dff', color: '#fff', borderRadius: '3px' }}
-              onMouseEnter={e => !sending && !currentResult?.ok && (e.currentTarget.style.background = '#3d5df0')}
-              onMouseLeave={e => e.currentTarget.style.background = '#4d6dff'}
-            >
-              {sending ? 'sending...' : currentResult?.ok ? 'sent ✓' : 'Send'}
-            </button>
-          </div>
+          </button>
         </div>
       </div>
+      <AnimatePresence>
+        {showDisclaimer && (
+          <DisclaimerPopup
+            onAccept={handleDisclaimerAccept}
+            onCancel={() => setShowDisclaimer(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
