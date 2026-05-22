@@ -1,0 +1,640 @@
+ ▐▛███▜▌   Claude Code v2.1.148
+▝▜█████▛▘  Opus 4.7 · Claude Max
+  ▘▘ ▝▝    ~/codeing/transferhacks/lab-emailer
+
+❯ can u refresh me where we left off, i was doing the 100 lab validation thing  
+  righ                                                                          
+
+  Recalled 1 memory (ctrl+o to expand)
+
+● Bash(git status && echo "---" && git -C .worktrees/lab-scraper status 2>&1 |
+      head -30)
+  ⎿  On branch main
+     Your branch is behind 'origin/main' by 4 commits, and can be fast-forw
+     arded.
+     … +23 lines (ctrl+o to expand)
+
+● Bash(cd .worktrees/lab-scraper && git log --oneline -15 && echo "---LATEST IN
+      test_harness---" && ls scraper/test_harness/ 2>/dev/null | head -20 &&
+      echo "---test_lo…)
+  ⎿  e24f9eb feat: increase faculty load limit and add dataset for excluded
+      profiles
+     bc121f2 refactor: limit faculty batch size and implement profile-first
+     … +27 lines (ctrl+o to expand)
+
+● Bash(cd .worktrees/lab-scraper && ls scraper/data/test_logs/run_15_llm_hybrid/
+       scraper/data/test_logs/run_16_llm_always/ 2>&1 | head -30)
+  ⎿  Error: Exit code 1
+     /usr/bin/bash: line 1: cd: .worktrees/lab-scraper: No such file or 
+     directory
+
+  Read 2 files, listed 1 directory (ctrl+o to expand)
+
+● Here's where we left off on the lab-scraper validation:
+
+  Worktree: .worktrees/lab-scraper on feature/lab-scraper (4 commits ahead of
+  memory snapshot — last commits adjusted faculty load limits + profile-first
+  lab URL resolution).
+
+  Latest test_harness scores (100-prof harness, score = correct − wrong):
+
+  Run: run_13_filter_cached
+  Date: Apr 17
+  Config: strong-positive + people-page fallback (no LLM)
+  Score: 50
+  correct_url: —
+  correct_null: —
+  wrong_resurrection: —
+  ────────────────────────────────────────
+  Run: run_15_llm_hybrid
+  Date: Apr 23
+  Config: strong-positive + people-page + llm_verify (selective)
+  Score: 49
+  correct_url: 50
+  correct_null: 12
+  wrong_resurrection: 7
+  ────────────────────────────────────────
+  Run: run_16_llm_always
+  Date: Apr 23
+  Config: llm_verify_always on every candidate
+  Score: 57
+  correct_url: 49
+  correct_null: 16
+  wrong_resurrection: 3
+
+  Best so far: run_16 — --always-verify --llm-verify-always with
+  meta-llama/llama-3.1-8b-instruct. Big win was cutting wrong-resurrections from
+   7→3 by LLM-rejecting wrong-person matches (Varner, Messer, Karris, Fahey).
+
+  Residual misses in run_16 (8 total errors):
+  - 5 missed true URL: Mckerrow (DNS NXDOMAIN), Curtius (qcclab.com — LLM
+  rejected as non-UCSD), Liss (CMS archive heuristic too strict), Komarova,
+  Lewis (UGA — LLM correctly says different uni, but it IS the true URL since he
+   moved)
+  - 3 wrong resurrections: Hammer (UPenn namesake), Opella (emeritus), Golden
+  (faculty-profile page)
+
+  Uncommitted in worktree: wrong.json modified, plus untracked IDEAS.md,
+  review/, test_logs/, verification_*.json, test_harness/, tools/.
+
+  Want me to update the memory file with run_16 as the new best config, or dig
+  into one of the residual failures?
+
+✻ Crunched for 49s
+
+❯ how do i runt he ui for the 100 lab things again                              
+
+  Searched for 1 pattern, read 1 file, listed 1 directory (ctrl+o to expand)
+
+● The review UI is a static HTML page served from scraper/data/review/. Run it
+  like this from inside the worktree:
+
+  cd .worktrees/lab-scraper/scraper
+  python -m http.server 8765 --directory data/review
+
+  Then open http://localhost:8765/ — index.html reads todo.json and
+  shots_meta.json from the same directory.
+
+  If the screenshots or todo list are stale and you want to regenerate first:
+
+  # 1. Rebuild todo.json from verification_results.json + 
+  verification_existence.json
+  python -m tools.build_review_set
+
+  # 2. Capture viewport screenshots into data/review/shots/
+  python -m tools.screenshot_review
+
+  Want me to start the server for you, or are you running it yourself per your
+  usual preference?
+
+✻ Crunched for 20s
+
+※ recap: You're validating the lab-scraper resolver against 100 UCSD profs; best run so far is run_16 (LLM-always, score 57). Next: start the review UI with `python -m http.server 8765 --directory data/review` from the worktree's scraper dir. (disable recaps in /config)
+
+❯ bruh i lost all my progress... it says 0 reviewed                             
+
+  Searched for 2 patterns, listed 1 directory (ctrl+o to expand)
+
+● Bad news: progress lives only in browser localStorage under key
+  lab_review_decisions_v1, scoped to the exact origin (host+port). I checked —
+  there's no decisions.json anywhere in the repo or ~/Downloads, so it was never
+   exported.
+
+  Most likely cause: you're opening it from a different origin than before.
+  localStorage at http://localhost:8765 is a completely separate bucket from
+  http://localhost:8000, http://127.0.0.1:8765, or file:///…/index.html. Same
+  UI, different jar.
+
+  Try to recover before doing anything else:
+
+  1. Open DevTools (F12) on the current page → Application tab → Local Storage.
+  Look in the left tree — if you previously used a different port or 127.0.0.1,
+  you'll see multiple http://localhost:* / http://127.0.0.1:* entries. Click
+  each and check for the key lab_review_decisions_v1.
+  2. If you find it under a different origin, copy the value (JSON blob), then
+  on the current origin run in the Console:
+  localStorage.setItem("lab_review_decisions_v1", `PASTE_JSON_HERE`)
+  2. then refresh.
+  3. Alternatively just re-serve on whatever port you used originally and reopen
+   — the data is still in that origin's bucket.
+
+  Other things to check: same browser, not incognito, didn't clear site data.
+
+  Going forward: hit the "Export decisions.json" button after every batch — that
+   downloads the JSON to disk so this can't happen again. Worth me adding an
+  auto-export-on-decide or a server-side save endpoint?
+
+✻ Churned for 31s
+
+❯ ok moving on u remember the 2 entrypoints to getting a lab i told u to write  
+  it somewhere                                                                  
+
+  Searched for 1 pattern, read 1 file, listed 1 directory (ctrl+o to expand)
+
+● Honest answer: I don't have a "2 entrypoints" note anywhere. Memory has
+  nothing on it. The closest written artifact is scraper/IDEAS.md in the
+  worktree, but it documents three strategies, not two:
+
+  - Strategy A — Brave search → profile-link extraction → LLM ranking →
+  verify_lab_url (the current pipeline, in stages/stage2_urls.py)
+  - Strategy B — start from the prof's profile page and read off the lab link
+  (B1: biology dept JSON API labURL field; B2: profiles.ucsd.edu HTML scrape of
+  the VIVO website-table; B3: per-dept server-rendered HTML)
+  - Strategy C — hand-pick a registry of dept directory pages and LLM-extract
+  [{name, lab_url}] per page
+
+  All three branch off one shared starting point: data/faculty.json (the curated
+   researcherprofiles.org list).
+
+  Two possibilities for what you meant:
+
+  1. You're collapsing it to search-based (A) vs curated-page-based (B+C) —
+  that's a real binary distinction (do we trust a search engine, or do we trust
+  a human-/dept-maintained page).
+  2. There's a "2 entrypoints" framing from a conversation that I just never
+  wrote down — in which case it's lost and you'll need to re-tell me.
+
+  Which one is it? If (1), I'll save it as a memory now. If (2), tell me the two
+   and I'll write it.
+✻ Brewed for 33s
+
+※ recap: You're validating the 100-lab scraper; last score was run_16 at 57/63 using `--always-verify --llm-verify-always`. You asked where the "2 entrypoints to getting a lab" note lives — I have nothing saved, so next is for you to re-tell me the two. (disable recaps in /config)
+
+❯ ok lets do 3 phases . first phase is easiest its checking waht lab is linked  
+  on their profiles page.                                                       
+  second is the user provided lab directories, its structure is not always the  
+  same, idk how we should handle this. a crawler or an ai crawler or something  
+  else                                                                          
+  third is the people in the professor list that we didnt get a result for, we  
+  can do brave search                                                           
+
+● I should engage the brainstorming skill since we're designing a feature
+  pipeline.
+
+● Skill(superpowers:brainstorming)
+  ⎿  Successfully loaded skill
+
+● I need to load the task tools and start tracking the brainstorming checklist.
+
+● Before we get into Phase 2's mechanism, one foundational question. Your
+  phrasing ("people we didn't get a result for, do brave search") sounds
+  sequential — Phase 1 runs, then Phase 2 only on misses, then Phase 3 on
+  remaining misses. That's a real departure from the IDEAS.md plan, which had
+  all three running in parallel with a merger reconciling conflicts.
+
+● User answered Claude's questions:
+  ⎿  · Should the three phases run sequentially (each fills gaps left by the 
+     previous) or in parallel with a merger? → each phase should be run manually
+      and is done for all the professors at once. 
+
+● Got it — manual orchestration, each phase emits a full-coverage map across all
+   profs, merging/comparing happens separately. That's cleaner than my
+  sequential framing.
+
+● Now your real question — Phase 2's mechanism for handling variable directory
+  page structure. Three real options:
+
+● User answered Claude's questions:
+  ⎿  · How should Phase 2 extract (name, lab_url) pairs from dept directory 
+     pages that all have different layouts? → LLM extractor on anchor-list 
+     (Recommended)
+
+● One more clarifying question before I draft the design — Phase 1 scope.
+
+  The "profile page" can mean multiple things, and they have different signal
+  quality:
+● User answered Claude's questions:
+  ⎿  · Which profile sources should Phase 1 read from? → seems you have 
+     alzheimers. 1 is correct becuase that was taken from ucsd profiles. also 
+     for each stage we need like a way to keeps track of each person and if and 
+     when we found a url. db sounds overkill but maybe not idk the best way
+
+● Apologies — let me verify rather than guess.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Got it — profile_url in faculty.json is researcherprofiles.org/profile/{id}.
+  Per IDEAS.md, that's the cross-UC mirror of UCSD's Profiles RNS instance; the
+  VIVO website-table HTML lives in there. So Phase 1 = fetch that URL, scrape
+  the websites section. Single dispatcher, no biology API special case needed.
+  Recording this so I don't lose it again.
+
+  Now your tracking question. You're right that a DB is overkill for 100 rows —
+  but you do need per-phase state so you can rerun any phase, see who got
+  resolved when, and merge cleanly. Three options:
+
+● User answered Claude's questions:
+  ⎿  · How should we persist per-prof, per-phase results? → Per-phase JSON files
+      (Recommended)
+
+● I have enough to draft the design. I'll walk through it in sections — confirm
+  each before I move on.
+
+  Section 1 — Architecture & state (overview)
+
+  Three independently-runnable scripts, each writes its own JSON file in
+  scraper/data/:
+
+  Phase: 1
+  Script: phases/phase1_profiles.py
+  Input: faculty.json
+  Output file: phase1_profiles.json
+  Mechanism: Fetch profile_url, scrape VIVO website-table rows
+  ────────────────────────────────────────
+  Phase: 2
+  Script: phases/phase2_directories.py
+  Input: phase2_registry.yaml (hand-curated [{dept, url}] list)
+  Output file: phase2_directories.json
+  Mechanism: Fetch each directory, send (href, anchor_text, surrounding_text)
+    tuples to small LLM, get back [{name, lab_url}], fuzzy-match names to
+    faculty.json
+  ────────────────────────────────────────
+  Phase: 3
+  Script: phases/phase3_brave.py
+  Input: faculty.json
+  Output file: phase3_brave.json
+  Mechanism: Existing Strategy A pipeline (Brave + LLM rank + verify)
+
+  Each output file has the same shape, one entry per prof:
+
+  {
+    "Trey Ideker": {
+      "url": "https://idekerlab.ucsd.edu",
+      "found_at": "2026-05-21T14:32:00Z",
+      "source": "researcherprofiles.org/profile/193896",
+      "evidence": "VIVO website-table row, anchor='Ideker Lab website'"
+    },
+    "Brigid Boland": { "url": null, "found_at": "...", "source": "...",
+  "evidence": "no website-table rows in profile" }
+  }
+
+  A separate phases/merge.py reads all three files and produces merged.json with
+   priority Phase 2 > Phase 1 > Phase 3 (curated > dept-maintained > search),
+  plus a per-prof provenance trail. No automatic merger inside the phase scripts
+   — they don't talk to each other.
+
+  Does this skeleton look right before I drill into each phase?
+
+✻ Cooked for 3m 36s
+
+❯ yea and can we not one shot the implementation i have to make sure each phase 
+   is done right and u actually know what the websites look like.               
+
+● Saving that as a working rule so I don't forget.
+
+  Recalled 1 memory, wrote 2 memories (ctrl+o to expand)
+
+● Saved. Folding that into Section 2 — the "look at the real page first" step
+  becomes an explicit checkpoint, not an optional courtesy.
+
+  Section 2 — Phase 1 details (profile-page scrape)
+
+  Build loop (in order, with you signing off between steps):
+
+  1. Reality check. Fetch 5 real researcherprofiles.org/profile/{id} pages
+  spanning departments (e.g. Ideker / Boland / Moore / Mckerrow / Komives — mix
+  of known-has-lab, known-no-lab, known-edge-case). Save the raw HTML and show
+  you:
+    - Does the VIVO website-table structure from IDEAS.md (which was based on
+  profiles.ucsd.edu) actually appear on researcherprofiles.org?
+    - If it differs — what selector actually grabs the websites section?
+    - How many rows per page typically? Single lab link, or multiple websites
+  where we have to pick?
+    - What does an "empty" page look like? (Brigid Boland — we expect no lab
+  here.)
+  2. Sign-off checkpoint #1. You eyeball my findings, confirm the parsing target
+   before I write any code.
+  3. Write the extractor. phases/phase1_profiles.py — one module. Plain aiohttp
+  + BeautifulSoup, no LLM. Logic: fetch URL, find the websites section, pull
+  each (href, anchor_text), return the best candidate (heuristics: contains
+  "lab" / "group" / lastname; favor off-domain over
+  *.ucsd.edu/research/faculty/* profile-style URLs) or null if none.
+  4. Sign-off checkpoint #2. Show you the extractor logic before running on
+  all 100.
+  5. Run on full 100. Emit phase1_profiles.json. Print a summary: X URLs found, 
+  Y nulls, Z fetch errors. Show you the JSON.
+  6. Sign-off checkpoint #3. You spot-check a handful (especially edge cases —
+  known-no-lab profs, profs whose lab moved, etc.) before we declare Phase 1
+  done and move to Phase 2.
+
+  Deliverables for Phase 1: phases/phase1_profiles.py,
+  scraper/data/phase1_profiles.json, plus a phase1_samples/ directory with the 5
+   raw HTML pages from step 1 so we can re-inspect later without re-fetching.
+
+  Open question I'm flagging now, not deciding yet: if the websites section has
+  multiple non-profile links (e.g. lab site + grant page + Twitter), is
+  selecting the wrong one in Phase 1 a Phase-1 problem (we should add an LLM
+  tiebreaker) or a merger problem (Phase 2 will overrule it)? I'll punt this
+  until we see the data in step 1.
+
+  Look right? Want any of the checkpoints removed/added before I draft Phase 2?
+
+✻ Baked for 48s
+
+❯ it fine. also the question phase 1 should return return the lab or nothing    
+  and it should be correct                                                      
+
+● Right — that's the "confident NULL" rule already in memory
+  ([[feedback-confident-null]]). Applied to Phase 1: if the websites section is
+  ambiguous (multiple plausible links, no clear "lab" signal), return null, not
+  a guess. Locking that in.
+
+● Section 3 — Phase 2 details (dept directory LLM extractor)
+
+  Inputs:
+
+  - scraper/data/phase2_registry.yaml — you curate this. Shape: [{dept, url, 
+  notes?}]. Start with maybe 5–10 dept directory pages (bioinformatics,
+  chemistry faculty, rheumatology labs, etc.). Easy to grow over time.
+  - scraper/data/faculty.json — to know which extracted names map back to "our"
+  100 profs.
+
+  Build loop (same shape as Phase 1):
+
+  1. Reality check. You give me 3–5 directory URLs to use as starter examples. I
+   fetch each, save raw HTML, and show you:
+    - Is it server-rendered or JS shell? (If JS shell, we need playwright or a
+  different source — flag it then.)
+    - What does the anchor-list look like once nav/footer/sidebar are stripped?
+  Specifically, the (href, anchor_text, ±200 chars surrounding text) tuples we'd
+   feed the LLM.
+    - Are there obvious traps (department-staff mixed in with PIs, multiple
+  links per prof, lab-named-after-concept-not-PI like cmrg.ucsd.edu)?
+  2. Sign-off checkpoint #1. You confirm the extraction target is sane before
+  any LLM calls.
+  3. Write the extractor. phases/phase2_directories.py:
+    - Per directory URL: fetch → strip non-content → extract anchor tuples → LLM
+   call (small model, JSON-mode output [{name, lab_url}]) → cache result keyed
+  by URL+content hash so re-runs of the same page are free.
+    - Then a name-matcher step that maps each extracted name back to a
+  faculty.json entry. Normalization: lowercase, strip middle
+  initials/diacritics/punctuation; match on (first_token, last_token). Unmatched
+   names get logged but dropped — they're profs we don't care about for the
+  100-set. Ambiguous matches (two faculty members same last name in different
+  depts) get logged and dropped per the confident-NULL rule, not guessed.
+  4. Sign-off checkpoint #2. Show you the LLM prompt + the name-matcher logic
+  before running across all registered directories.
+  5. Run all directories. Emit phase2_directories.json. Print per-directory
+  summary: directory X: extracted N labs, matched M to our faculty, dropped K 
+  ambiguous.
+  6. Sign-off checkpoint #3. You eyeball the per-directory results plus a few
+  cross-dept name collisions before declaring Phase 2 done.
+
+  Two specific decisions to flag now:
+
+  - JS-shell directories: if step 1 reveals any, I'll skip them and tell you
+  rather than silently fall back to playwright. Adding a browser dependency is a
+   bigger commit than this phase warrants — handle case-by-case.
+  - Re-using cached anchor lists across runs: cache by
+  sha256(stripped_anchor_list_json) so if the page hasn't structurally changed,
+  the LLM isn't re-billed. Saves cost during iteration.
+
+  Output schema identical to Phase 1 so the merger doesn't care about source:
+  {
+    "Trey Ideker": {
+      "url": "http://idekerlab.ucsd.edu",
+      "found_at": "...",
+      "source": "phase2:https://bioinformatics.ucsd.edu/faculty",
+      "evidence": "anchor text: 'Ideker Lab'"
+    }
+  }
+
+  Look right? Anything to add before Phase 3?
+
+✻ Brewed for 35s
+
+※ recap: We're brainstorming the 3-phase lab-discovery pipeline and just finished presenting Phase 2 (dept directory LLM extractor). Next action is your sign-off on Phase 2 so I can move to Phase 3. (disable recaps in /config)
+
+❯ ok                                                                            
+
+● Section 4 — Phase 3 details (Brave search fallback)
+
+  Mostly wrapping existing code. The current pipeline (stages/stage2_urls.py +
+  test_harness/resolver.py) already does this — best config was run_16
+  (--always-verify --llm-verify-always with llama-3.1-8b-instruct, score=57).
+  Phase 3 reuses it.
+
+  Build loop (lighter since the logic is built):
+
+  1. Reality check. Diff stages/stage2_urls.py against test_harness/resolver.py
+  — the test harness has improvements (run_16 LLM-always-verify, strong-positive
+   match, etc.) that haven't been ported to stages/. Show you what's drifted
+  before deciding whether to (a) port the harness logic into stages/, or (b)
+  call the harness's resolver directly from Phase 3.
+  2. Sign-off checkpoint #1. You pick port-vs-call.
+  3. Write phases/phase3_brave.py. Thin wrapper: for each faculty entry, run
+  resolver, write result in the unified schema (url / found_at / source / 
+  evidence). Runs against all 100 profs — same as Phase 1/2, no skipping. Source
+   field = "phase3:brave" plus the query string used. Evidence field = LLM
+  verdict + reason.
+  4. Sign-off checkpoint #2. Show you 5 sample outputs (mix of correct, null,
+  and previously-wrong-from-run_16) before running on all 100.
+  5. Run on full 100. Emit phase3_brave.json. Same console summary as the
+  others.
+
+  Section 5 — Merger & scoring
+
+  phases/merge.py — separate script, runs whenever you want a unified view. No
+  automatic execution.
+
+  - Reads phase1_profiles.json, phase2_directories.json, phase3_brave.json.
+  - For each prof: pick winner by priority Phase 2 > Phase 1 > Phase 3 (curated
+  dept directory > prof's profile page > search engine).
+  - Emit merged.json per prof:
+  {
+    "Trey Ideker": {
+      "url": "http://idekerlab.ucsd.edu",
+      "winning_phase": 2,
+      "all_phases": {
+        "phase1": "http://idekerlab.ucsd.edu",
+        "phase2": "http://idekerlab.ucsd.edu",
+        "phase3": "http://idekerlab.ucsd.edu"
+      },
+      "agreement": "all_agree"
+    }
+  }
+  - Print a coverage report: phase1 resolved N, phase2 resolved M, phase3 
+  resolved K, merged resolved T, disagreements D.
+
+  Scoring: existing test_harness already compares against
+  verification_results.json + verification_existence.json + wrong.json. Add a
+  flag to point it at merged.json instead of the live resolver output → instant
+  re-score. No new ground truth needed since you're using the same 100 profs.
+
+  That's the full design. Look right? Ready for me to write it up as a spec doc?
+
+✻ Baked for 22s
+
+❯ i forget but does the llm ranker go inside the lab website to verify it? i    
+  think that would be good                                                      
+
+● Let me actually look rather than guess.
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Good catch. Yes — that's exactly what the winning run_16 config does in Phase
+  3 already (resolver.py:500-550, _llm_verify_lab_url):
+
+  1. Fetch the candidate URL's HTML
+  2. Convert to markdown (truncated to 4000 chars)
+  3. Send to the LLM with a strict prompt asking same_person / ucsd_affiliated /
+   is_lab_site — verdict only "accept" if all three are true
+  4. Cache by (model, name, url) so re-runs are free
+
+  That's already wired for Phase 3. But — and this is what your question implies
+   — we haven't proposed running it at the end of Phase 1 or Phase 2, and we
+  should. Otherwise:
+
+  - Phase 1 risk: profile page links smith-lab.com, but it's actually a
+  different Smith (stale link, namesake collision). Phase 1 returns it, merger
+  picks it (priority over Phase 3), wrong answer ships.
+  - Phase 2 risk: directory page has <li>Dr. Jones — jones-lab.com</li> but the
+  domain expired and now redirects to a spam site. LLM extractor happily returns
+   it.
+
+  Proposed addition to the design: every phase's final step is a shared
+  verify_candidate_url(name, url) → (accept, reason) function — the same
+  _llm_verify_lab_url we already have. If verify rejects, the phase returns null
+   (per the confident-NULL rule). Each phase's JSON also stores
+  verification_reason so we can see why something got nulled.
+
+  Cost: ~1 LLM call per resolved candidate per phase. For 100 profs × 3 phases
+  worst case = 300 verify calls, cached after the first run.
+
+  Want me to add this as a cross-phase rule in the spec? It also means the
+  merger's priority becomes "Phase 2-verified > Phase 1-verified > Phase
+  3-verified", where unverified candidates from any phase don't enter the merge
+  at all.
+
+✻ Worked for 46s
+
+❯ actually should we just get from brave search separate the profiles from the  
+  potential lab urls, and then we go into the profiles and get the lab url, and 
+   then from all 3 phases we have a bunch of lab url candidates where we can    
+  llm validate and stuff?                                                       
+  also the brave search for professor lab can turn out both lab url and a       
+  professor profile (different from research profiles) and that usually has a   
+  lab url. do we account for that too                                           
+  also were there problems with the truncation incorrectly cutting out stuff ?  
+  should we not truncate at all ?                                               
+
+● Three good questions. Let me actually look at the truncation behavior before
+  answering #3.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● All three questions are pointing at the same thing: the architecture I
+  sketched has each phase decide too early. Let me look at each:
+
+  1. Unified candidate pool, verifier as terminal step
+
+  You're right — this is cleaner. New shape:
+
+  - Phases become candidate sources, not deciders. Each phase emits a list of
+  {url, source, evidence} per prof, not a single winner.
+  - One shared verifier runs at the end over the pooled candidates per prof.
+  Picks the strongest-verified URL or returns null.
+  - Merger goes away. Replaced by "verifier picks the winner among all
+  candidates for this prof."
+
+  This kills the "Phase 2 priority > Phase 1 > Phase 3" rule. Instead, every
+  candidate is judged on its own evidence, not on which source found it. If
+  Phase 3 (Brave) finds a stronger candidate than Phase 1 did, the verifier
+  picks it. The user doesn't need a merger script.
+
+  2. Brave → profile URLs that recurse into lab URLs
+
+  The current stages/stage2_urls.py already splits Brave hits into profile-style
+   vs non-profile (via _PROFILE_PATH_PATTERNS), and fetches the profile pages to
+   look for lab anchors. So the capability exists — but in the new
+  candidate-pool model it gets first-class treatment:
+
+  - Phase 3 fans out into two candidate streams per Brave query:
+    - lab_candidate — direct lab-looking URLs go straight into the pool
+    - profile_candidate — profile-style URLs get fetched and recursively scraped
+   (same logic as Phase 1) to extract lab links, which then go into the pool
+  - This means a Brave hit on e.g. bioengineering.ucsd.edu/faculty/jones (dept
+  profile, different from researcherprofiles.org) feeds back through the
+  profile-extraction logic and we get the lab link off it. Yes, accounted for.
+
+  3. Truncation
+
+  Looked at it: _html_to_markdown keeps first 3500 chars + last 500 chars of a
+  page, with ...[truncated]... in between (resolver.py:461-464). For a typical
+  50KB lab homepage, that's hollowing out the entire middle.
+
+  Plausibly affected run_16 failures:
+  - Kathleen Curtius at qcclab.com — rejected with same_person=False. QCC Lab
+  homepage probably has "Quantitative Cancer Control" branded at top and her
+  name deep in a People/Director section. Truncation likely cut her name out of
+  the middle.
+  - Stanley Opella (wrong resurrection on thestanleylab.org/research) —
+  /research page may not mention his name at all but other pages on the site do.
+   Verifier saw only the /research content. (This one is also a "which page on
+  the site" problem, not just truncation.)
+
+  Recommendation: bump max_chars to 16000 (~4× current) for the verifier. Cost
+  is trivial — llama-3.1-8b has 128k context. We can go higher if we want.
+  Alternatively, smarter snipping (title/h1/h2 + first N + a 1000-char window
+  centered on any last-name match). I'd start with the dumb bump and only add
+  snipping if specific cases still fail.
+
+  ---
+  Want me to redraft the architecture section with the unified candidate pool,
+  then continue from there? The original Sections 1, 4, and 5 all need rework —
+  Phases 1 and 2 still stand as candidate sources, just stop emitting "the
+  answer."
+
+✻ Cogitated for 4m 37s
+
+❯ how do i make this chat available on another computer                         
+
+● That's a Claude Code feature question — let me get an authoritative answer.
+
+● claude-code-guide(How to share a chat across computers)
+  ⎿  Done (3 tool uses · 23.5k tokens · 16s)
+  (ctrl+o to expand)
+
+● Short answer: no first-party sync. Conversation history is plain JSONL files
+  at ~/.claude/projects/<project>/<session-id>.jsonl on disk.
+
+  Practical paths:
+  - Rsync / Dropbox / iCloud on ~/.claude/ between the two machines. The catch:
+  the project path has to be identical on both — Claude Code ties sessions to
+  absolute disk paths, so /home/johnpork/codeing/transferhacks/lab-emailer on
+  one machine won't resume from /Users/johnpork/codeing/... on another.
+  - Private git repo for ~/.claude/projects/<this-project>/. Works but
+  transcripts contain pasted code and command history — don't push to a public
+  remote.
+  - claude.ai/code (web app) keeps a separate session list — not a sync
+  mechanism; it won't see your CLI sessions.
+
+  /export dumps a transcript to plaintext but there's no import counterpart, so
+  it's good for reading on another machine, not resuming on one.
+
+  So: easiest is rsync ~/.claude/ + ensure the project lives at the same
+  absolute path on both computers.
+
+  Ready to come back to the architecture redraft (unified candidate pool,
+  verifier as terminal step) whenever you are.
+
+✻ Crunched for 55s
